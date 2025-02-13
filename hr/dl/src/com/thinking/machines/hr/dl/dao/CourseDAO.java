@@ -24,7 +24,7 @@ File file = new File(FILE_NAME);
 RandomAccessFile randomAccessFile;
 randomAccessFile = new RandomAccessFile(file,"rw");
 //if file doesnt already exist, initialize file
-if(file.length()==0)
+if(randomAccessFile.length()==0)
 {
 //control enters means new file created
 randomAccessFile.writeBytes(String.format("%-10d",lastGeneratedCode) + "\n");
@@ -104,24 +104,152 @@ return treeSet1;
 throw new DAOException(ioException.getMessage());
 }
 }
-public CourseDTOInterface getByCourseCode(int code) throws DAOException
+public CourseDTOInterface getByCode(int code) throws DAOException
 {
-throw new DAOException("not yet implemented");
+if(code<=0) throw new DAOException("Invalid code: "+code);
+try
+{
+File file = new File(FILE_NAME);
+if(!(file.exists())) throw new DAOException("Invalid code: "+code);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+int fCode;
+String fTitle;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length()) //loop to find code
+{
+fCode = Integer.parseInt(randomAccessFile.readLine());
+fTitle = randomAccessFile.readLine();
+if(fCode==code)
+{
+//wrap
+CourseDTOInterface courseDTO;
+courseDTO = new CourseDTO();
+courseDTO.setCode(fCode);
+courseDTO.setTitle(fTitle);
+randomAccessFile.close();
+return courseDTO;
 }
-public CourseDTOInterface getByCourseTitle(String title) throws DAOException
+}
+randomAccessFile.close();
+throw new DAOException("Invalid code: "+code);
+}catch(IOException ioException)
 {
-throw new DAOException("not yet implemented");
+throw new DAOException(ioException.getMessage());
+}
+}
+public CourseDTOInterface getByTitle(String title) throws DAOException
+{
+if(title==null) throw new DAOException("Title is null");
+title=title.trim();
+if(title.length()==0) throw new DAOException("Length of title is zero");
+try
+{
+File file = new File(FILE_NAME);
+if(!(file.exists())) throw new DAOException("Invalid title: "+title);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+int fCode;
+String fTitle;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length()) //loop to find code
+{
+fCode = Integer.parseInt(randomAccessFile.readLine());
+fTitle = randomAccessFile.readLine();
+if(title.equalsIgnoreCase(fTitle))
+{
+//wrap
+CourseDTOInterface courseDTO;
+courseDTO = new CourseDTO();
+courseDTO.setCode(fCode);
+courseDTO.setTitle(fTitle);
+randomAccessFile.close();
+return courseDTO;
+}
+}
+randomAccessFile.close();
+throw new DAOException("Invalid title: "+title);
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public boolean codeExists(int code) throws DAOException
 {
-throw new DAOException("not yet implemented");
+if(code<=0) return false;
+try
+{
+File file = new File(FILE_NAME);
+if(!(file.exists())) return false;
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+int fCode;
+String fTitle;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length()) //loop to find code
+{
+fCode = Integer.parseInt(randomAccessFile.readLine());
+fTitle = randomAccessFile.readLine();
+if(fCode==code)
+{
+return true;
+}
+}
+randomAccessFile.close();
+return false;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public boolean titleExists(String title) throws DAOException
 {
-throw new DAOException("not yet implemented");
+if(title==null) return false;
+title=title.trim();
+if(title.length()==0) return false;
+try
+{
+File file = new File(FILE_NAME);
+if(!(file.exists())) return false;
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+int fCode;
+String fTitle;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length()) //loop to find title
+{
+fCode = Integer.parseInt(randomAccessFile.readLine());
+fTitle = randomAccessFile.readLine();
+if(title.equalsIgnoreCase(fTitle))
+{
+return true;
+}
+}
+randomAccessFile.close();
+return false;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public int getCount() throws DAOException
 {
-throw new DAOException("not yet implemented");
+try
+{
+File file = new File(FILE_NAME);
+if(!(file.exists())) return 0;
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+int recordCount = Integer.parseInt(randomAccessFile.readLine().trim());
+return recordCount;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 }
