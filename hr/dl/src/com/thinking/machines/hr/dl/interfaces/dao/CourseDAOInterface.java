@@ -4,7 +4,7 @@ import com.thinking.machines.hr.dl.interfaces.dto.*;
 import java.util.*; //for Set collection
 public interface CourseDAOInterface
 {
-public void add(CourseDTOInterface courseDTOInterface) throws DAOException;
+public void add(CourseDTOInterface courseDTO) throws DAOException;
 public void update(int code) throws DAOException;
 public void delete(int code) throws DAOException;
 public Set<CourseDTOInterface> getAll() throws DAOException;
