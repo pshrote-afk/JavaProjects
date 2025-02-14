@@ -4,8 +4,8 @@ import java.math.*; //for BigDecimal class
 import com.thinking.machines.enums.*;
 public interface StudentDTOInterface extends Comparable<StudentDTOInterface>,java.io.Serializable
 {
-public void setRollNo(int rollNo);
-public int getRollNo();
+public void setRollNo(String rollNo);
+public String getRollNo();
 public void setName(String name);
 public String getName();
 public void setDateOfBirth(Date dateOfBirth);
@@ -20,7 +20,7 @@ public void setEnrollmentNumber(String enrollmenNumber);
 public String getEnrollmentNumber();
 }
 /*
-private int rollNo;
+private String rollNo;
 private String name;
 private Date dateOfBirth;
 private GENDER gender;

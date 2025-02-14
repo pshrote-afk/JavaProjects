@@ -5,18 +5,18 @@ import java.math.*; //for BigDecimal
 import java.util.*; //for Date class
 public class StudentDTO implements StudentDTOInterface
 {
-private int rollNo;
+private String rollNo;
 private String name;
 private Date dateOfBirth;
 private char gender;
 private boolean isIndian;
 private BigDecimal fees;
 private String enrollmentNumber;
-public void setRollNo(int rollNo)
+public void setRollNo(String rollNo)
 {
 this.rollNo=rollNo;
 }
-public int getRollNo()
+public String getRollNo()
 {
 return this.rollNo;
 }
@@ -71,7 +71,7 @@ return this.enrollmentNumber;
 }
 public StudentDTO()
 {
-this.rollNo=0;
+this.rollNo=null;
 this.name=null;
 this.dateOfBirth=null;
 this.gender=' ';
@@ -85,15 +85,15 @@ public boolean equals(Object other)
 if(!(other instanceof StudentDTOInterface)) return false;
 StudentDTOInterface studentDTO;
 studentDTO = (StudentDTO)other;
-return this.rollNo==studentDTO.getRollNo();
+return this.rollNo.equalsIgnoreCase(studentDTO.getRollNo());
 }
-public int compareTo(StudentDTOInterface studentDTO)
+public int compareTo(StudentDTOInterface other)
 {
-return this.rollNo - studentDTO.getRollNo();
+return this.rollNo.compareToIgnoreCase(other.getRollNo());
 }
 public int hashCode()
 {
-return rollNo;
+return this.rollNo.toUpperCase().hashCode();
 }
 //3 methods
 }
