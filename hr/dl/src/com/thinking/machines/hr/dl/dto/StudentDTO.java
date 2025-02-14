@@ -1,13 +1,14 @@
 package com.thinking.machines.hr.dl.dto;
 import com.thinking.machines.hr.dl.interfaces.dto.*;
 import com.thinking.machines.enums.*;
-import math.*;
+import java.math.*; //for BigDecimal
+import java.util.*; //for Date class
 public class StudentDTO implements StudentDTOInterface
 {
 private int rollNo;
 private String name;
 private Date dateOfBirth;
-private GENDER gender;
+private char gender;
 private boolean isIndian;
 private BigDecimal fees;
 private String enrollmentNumber;
@@ -37,9 +38,10 @@ return this.dateOfBirth;
 }
 public void setGender(com.thinking.machines.enums.GENDER gender)
 {
-this.gender=gender;
+if(gender==GENDER.MALE) this.gender = 'M';
+else this.gender = 'F';
 }
-public com.thinking.machines.enums.GENDER getGender()
+public char getGender()
 {
 return this.gender;
 }
@@ -72,7 +74,7 @@ public StudentDTO()
 this.rollNo=0;
 this.name=null;
 this.dateOfBirth=null;
-this.gender=null;
+this.gender=' ';
 this.isIndian=false;
 this.fees=null;
 this.enrollmentNumber=null;
@@ -80,18 +82,18 @@ this.enrollmentNumber=null;
 
 public boolean equals(Object other)
 {
-if(!(other instanceof StudentDTOInterface)) return 0;
+if(!(other instanceof StudentDTOInterface)) return false;
 StudentDTOInterface studentDTO;
-student DTO = (StudentDTO)other;
-return this.code==studentDTO.getCode();
+studentDTO = (StudentDTO)other;
+return this.rollNo==studentDTO.getRollNo();
 }
 public int compareTo(StudentDTOInterface studentDTO)
 {
-return this.code - studentDTO.getCode();
+return this.rollNo - studentDTO.getRollNo();
 }
 public int hashCode()
 {
-return code;
+return rollNo;
 }
 //3 methods
 }
