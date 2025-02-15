@@ -8,6 +8,8 @@ public void setRollNo(String rollNo);
 public String getRollNo();
 public void setName(String name);
 public String getName();
+public void setCourseCode(int code);
+public int getCourseCode();
 public void setDateOfBirth(Date dateOfBirth);
 public Date getDateOfBirth();
 public void setGender(GENDER gender);
@@ -18,13 +20,17 @@ public void setFees(BigDecimal fees);
 public BigDecimal getFees();
 public void setEnrollmentNumber(String enrollmenNumber);
 public String getEnrollmentNumber();
+public void setAadharCardNumber(java.lang.String aadharCardNumber);
+public java.lang.String getAadharCardNumber();
 }
 /*
 private String rollNo;
 private String name;
+private int courseCode;
 private Date dateOfBirth;
 private GENDER gender;
 private boolean isIndian;
 private BigDecimal fees;
 private String enrollmentNumber;
+private String aadharCardNumber;
 */

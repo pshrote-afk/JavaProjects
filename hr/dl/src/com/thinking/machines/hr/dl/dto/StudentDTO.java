@@ -7,11 +7,13 @@ public class StudentDTO implements StudentDTOInterface
 {
 private String rollNo;
 private String name;
+private int courseCode;
 private Date dateOfBirth;
 private char gender;
 private boolean isIndian;
 private BigDecimal fees;
 private String enrollmentNumber;
+private String aadharCardNumber;
 public void setRollNo(String rollNo)
 {
 this.rollNo=rollNo;
@@ -27,6 +29,14 @@ this.name=name;
 public java.lang.String getName()
 {
 return this.name;
+}
+public void setCourseCode(int courseCode)
+{
+this.courseCode = courseCode;
+}
+public int getCourseCode()
+{
+return this.courseCode;
 }
 public void setDateOfBirth(java.util.Date dateOfBirth)
 {
@@ -69,15 +79,25 @@ public java.lang.String getEnrollmentNumber()
 {
 return this.enrollmentNumber;
 }
+public void setAadharCardNumber(java.lang.String aadharCardNumber)
+{
+this.aadharCardNumber = aadharCardNumber;
+}
+public java.lang.String getAadharCardNumber()
+{
+return this.aadharCardNumber;
+}
 public StudentDTO()
 {
 this.rollNo=null;
 this.name=null;
+this.courseCode=0;
 this.dateOfBirth=null;
 this.gender=' ';
 this.isIndian=false;
 this.fees=null;
 this.enrollmentNumber=null;
+this.aadharCardNumber=null;
 }
 
 public boolean equals(Object other)
