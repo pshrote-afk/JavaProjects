@@ -2,6 +2,8 @@ package com.thinking.machines.hr.dl.dao;
 import com.thinking.machines.hr.dl.exceptions.*;
 import com.thinking.machines.hr.dl.interfaces.dto.*;
 import com.thinking.machines.hr.dl.interfaces.dao.*;
+import com.thinking.machines.hr.dl.dto.*;
+import com.thinking.machines.enums.*;
 import java.util.*; //for Set collection, and Date class
 import java.math.*; //for BigDecimal class
 import java.text.*; //for SimpleDateFormat class
@@ -133,11 +135,97 @@ throw new DAOException("Not yet implemented");
 }
 public Set<StudentDTOInterface> getByCourseCode(int code) throws DAOException
 {
-throw new DAOException("Not yet implemented");
+Set<StudentDTOInterface> treeSet1 = new TreeSet<>();
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+StudentDTOInterface studentDTO;
+String fRollNo;
+String fName;
+int fCourseCode;
+char fGender;
+int x;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+fRollNo = randomAccessFile.readLine();
+fName = randomAccessFile.readLine();
+fCourseCode = Integer.parseInt(randomAccessFile.readLine());
+if(code==fCourseCode)
+{
+studentDTO = new StudentDTO();
+studentDTO.setRollNo(fRollNo);
+studentDTO.setName(fName);
+studentDTO.setCourseCode(fCourseCode);
+try
+{
+studentDTO.setDateOfBirth(simpleDateFormat.parse(randomAccessFile.readLine()));
+}catch(ParseException parseException)
+{
+throw new DAOException(parseException.getMessage());
+}
+fGender = randomAccessFile.readLine().charAt(0);
+studentDTO.setGender((fGender=='M')?GENDER.MALE:GENDER.FEMALE);
+studentDTO.setIsIndian(Boolean.parseBoolean(randomAccessFile.readLine()));
+studentDTO.setFees(new BigDecimal(randomAccessFile.readLine()));
+studentDTO.setEnrollmentNumber(randomAccessFile.readLine());
+studentDTO.setAadharCardNumber(randomAccessFile.readLine());
+treeSet1.add(studentDTO);
+}
+else
+{
+for(x=0;x<=5;x++) randomAccessFile.readLine();
+}
+}
+randomAccessFile.close();
+return treeSet1;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public Set<StudentDTOInterface> getAll() throws DAOException
 {
-throw new DAOException("Not yet implemented");
+Set<StudentDTOInterface> treeSet1 = new TreeSet<>();
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+StudentDTOInterface studentDTO;
+char fGender;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+studentDTO = new StudentDTO();
+studentDTO.setRollNo(randomAccessFile.readLine());
+studentDTO.setName(randomAccessFile.readLine());
+studentDTO.setCourseCode(Integer.parseInt(randomAccessFile.readLine()));
+try
+{
+studentDTO.setDateOfBirth(simpleDateFormat.parse(randomAccessFile.readLine()));
+}catch(ParseException parseException)
+{
+throw new DAOException(parseException.getMessage());
+}
+fGender = randomAccessFile.readLine().charAt(0);
+studentDTO.setGender((fGender=='M')?GENDER.MALE:GENDER.FEMALE);
+studentDTO.setIsIndian(Boolean.parseBoolean(randomAccessFile.readLine()));
+studentDTO.setFees(new BigDecimal(randomAccessFile.readLine()));
+studentDTO.setEnrollmentNumber(randomAccessFile.readLine());
+studentDTO.setAadharCardNumber(randomAccessFile.readLine());
+treeSet1.add(studentDTO);
+}
+randomAccessFile.close();
+return treeSet1;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public boolean isCourseCodeAllotted(int courseCode) throws DAOException
 {
@@ -169,10 +257,51 @@ throw new DAOException("Not yet implemented");
 }
 public int getCount() throws DAOException
 {
-throw new DAOException("Not yet implemented");
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+int count = Integer.parseInt(randomAccessFile.readLine().trim());
+randomAccessFile.close();
+return count;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public int getCountByCourse(int code) throws DAOException
 {
-throw new DAOException("Not yet implemented");
+if(code<=0) throw new DAOException("Invalid code: "+code);
+if(!(new CourseDAO().codeExists(code))) throw new DAOException("Invalid code: "+code);
+int count=0;
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+StudentDTOInterface studentDTO;
+int fCourseCode;
+int x;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+fCourseCode = Integer.parseInt(randomAccessFile.readLine());
+if(code==fCourseCode)
+{
+count++;
+}
+for(x=0;x<=5;x++) randomAccessFile.readLine();
+}
+randomAccessFile.close();
+return count;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 }
