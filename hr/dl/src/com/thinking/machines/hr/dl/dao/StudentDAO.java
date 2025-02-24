@@ -252,7 +252,71 @@ throw new DAOException(ioException.getMessage());
 }
 public void delete(String rollNo) throws DAOException
 {
-throw new DAOException("Not yet implemented");
+if(rollNo==null) throw new DAOException("Roll no is null");
+rollNo=rollNo.trim();
+if(rollNo.length()==0) throw new DAOException("Length of roll no cannot be zero"); 
+//Now check duplicacy of roll, enroll and aadhar in file. 
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+boolean rollNoFound=false;
+String fRollNo;
+int x;
+long foundAt=0;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+if(rollNoFound==false)
+{
+foundAt=randomAccessFile.getFilePointer();
+}
+fRollNo = randomAccessFile.readLine();
+for(x=0;x<=7;x++) randomAccessFile.readLine();
+if(fRollNo.equalsIgnoreCase(rollNo))
+{
+rollNoFound=true;
+}
+if(rollNoFound) break;
+}
+if(rollNoFound==false)
+{
+throw new DAOException("Invalid roll no: "+rollNo);
+}
+File tmpFile = new File("student.tmp");
+RandomAccessFile tmpRandomAccessFile;
+tmpRandomAccessFile = new RandomAccessFile(tmpFile,"rw");
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+tmpRandomAccessFile.writeBytes(randomAccessFile.readLine() + "\n");
+}
+//delete
+randomAccessFile.seek(foundAt);
+tmpRandomAccessFile.seek(0);
+while(tmpRandomAccessFile.getFilePointer() < tmpRandomAccessFile.length())
+{
+randomAccessFile.writeBytes(tmpRandomAccessFile.readLine() + "\n");
+}
+randomAccessFile.setLength(randomAccessFile.getFilePointer());
+//update header
+String recordCountString;
+randomAccessFile.seek(0);
+randomAccessFile.readLine();
+foundAt = randomAccessFile.getFilePointer();
+recordCountString = randomAccessFile.readLine().trim();
+int recordCount = Integer.parseInt(recordCountString);
+recordCount--;
+randomAccessFile.seek(foundAt);
+randomAccessFile.writeBytes(String.format("%-10d",recordCount) + "\n");
+tmpRandomAccessFile.setLength(0);
+tmpRandomAccessFile.close();
+randomAccessFile.close();
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public Set<StudentDTOInterface> getByCourseCode(int code) throws DAOException
 {
