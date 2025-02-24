@@ -1,5 +1,5 @@
 package com.thinking.machines.hr.bl.interfaces.pojo;
-public interface DesignationInterface extends java.io.Serializable,Comparable<DesignationInterface>
+public interface CourseInterface extends java.io.Serializable,Comparable<CourseInterface>
 {
 public void setCode(int code);
 public int getCode();
