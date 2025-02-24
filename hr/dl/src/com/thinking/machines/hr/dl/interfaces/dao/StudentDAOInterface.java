@@ -9,7 +9,7 @@ public void update(StudentDTOInterface studentDTO) throws DAOException;
 public void delete(String rollNo) throws DAOException;
 public Set<StudentDTOInterface> getByCourseCode(int code) throws DAOException;
 public Set<StudentDTOInterface> getAll() throws DAOException;
-public boolean isCourseCodeAllotted(int courseCode) throws DAOException;
+public boolean isCourseAllotted(int code) throws DAOException;
 
 public StudentDTOInterface getByRollNo(String rollNo) throws DAOException;
 public StudentDTOInterface getByEnrollmentNumber(String enrollmentNumber) throws DAOException;

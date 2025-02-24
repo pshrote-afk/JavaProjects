@@ -412,33 +412,324 @@ return treeSet1;
 throw new DAOException(ioException.getMessage());
 }
 }
-public boolean isCourseCodeAllotted(int courseCode) throws DAOException
+public boolean isCourseAllotted(int code) throws DAOException
 {
-throw new DAOException("Not yet implemented");
+if(code<=0) return false;
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+boolean courseFound=false;
+int fCode;
+int x;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+fCode = Integer.parseInt(randomAccessFile.readLine());
+if(fCode==code)
+{
+courseFound=true;
+break;
+}
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+}
+return courseFound;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public StudentDTOInterface getByRollNo(String rollNo) throws DAOException
 {
-throw new DAOException("Not yet implemented");
+if(rollNo==null) throw new DAOException("Roll no is null");
+rollNo=rollNo.trim();
+if(rollNo.length()==0) throw new DAOException("Length of roll no cannot be zero");
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+String fRollNo;
+String fName;
+int fCourseCode;
+Date fDateOfBirth;
+char fGender;
+boolean fIsIndian;
+BigDecimal fFees;
+String fEnrollmentNumber;
+String fAadharCardNumber;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+fRollNo = randomAccessFile.readLine();
+if(fRollNo.equalsIgnoreCase(rollNo))
+{
+fName = randomAccessFile.readLine();
+fCourseCode = Integer.parseInt(randomAccessFile.readLine());
+try
+{
+fDateOfBirth = simpleDateFormat.parse(randomAccessFile.readLine());
+}catch(ParseException parseException)
+{
+throw new DAOException(parseException.getMessage());
+}
+fGender = randomAccessFile.readLine().charAt(0);
+fIsIndian = Boolean.parseBoolean(randomAccessFile.readLine());
+fFees = new BigDecimal(randomAccessFile.readLine());
+fEnrollmentNumber = randomAccessFile.readLine();
+fAadharCardNumber = randomAccessFile.readLine();
+StudentDTOInterface studentDTO = new StudentDTO();
+studentDTO.setRollNo(fRollNo);
+studentDTO.setName(fName);
+studentDTO.setCourseCode(fCourseCode);
+studentDTO.setDateOfBirth(fDateOfBirth);
+studentDTO.setGender((fGender=='M')?GENDER.MALE:GENDER.FEMALE);
+studentDTO.setIsIndian(fIsIndian);
+studentDTO.setFees(fFees);
+studentDTO.setEnrollmentNumber(fEnrollmentNumber);
+studentDTO.setAadharCardNumber(fAadharCardNumber);
+return studentDTO;
+}
+for(int x=0;x<8;x++)
+{
+randomAccessFile.readLine();
+}
+}
+randomAccessFile.close();
+throw new DAOException("Invalid roll no: "+rollNo);
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public StudentDTOInterface getByEnrollmentNumber(String enrollmentNumber) throws DAOException
 {
-throw new DAOException("Not yet implemented");
+if(enrollmentNumber==null) throw new DAOException("Enrollment number is null");
+enrollmentNumber=enrollmentNumber.trim();
+if(enrollmentNumber.length()==0) throw new DAOException("Length of enrollment number cannot be zero");
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+String fRollNo;
+String fName;
+int fCourseCode;
+Date fDateOfBirth;
+char fGender;
+boolean fIsIndian;
+BigDecimal fFees;
+String fEnrollmentNumber;
+String fAadharCardNumber;
+long foundAt=0;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+foundAt=randomAccessFile.getFilePointer();
+for(int x=0;x<7;x++) randomAccessFile.readLine();
+fEnrollmentNumber=randomAccessFile.readLine();
+randomAccessFile.readLine(); //aadharCard
+if(fEnrollmentNumber.equalsIgnoreCase(enrollmentNumber))
+{
+randomAccessFile.seek(foundAt);
+fRollNo = randomAccessFile.readLine();
+fName = randomAccessFile.readLine();
+fCourseCode = Integer.parseInt(randomAccessFile.readLine());
+try
+{
+fDateOfBirth = simpleDateFormat.parse(randomAccessFile.readLine());
+}catch(ParseException parseException)
+{
+throw new DAOException(parseException.getMessage());
+}
+fGender = randomAccessFile.readLine().charAt(0);
+fIsIndian = Boolean.parseBoolean(randomAccessFile.readLine());
+fFees = new BigDecimal(randomAccessFile.readLine());
+fEnrollmentNumber = randomAccessFile.readLine(); //re-reading just for clarity
+fAadharCardNumber = randomAccessFile.readLine(); 
+StudentDTOInterface studentDTO = new StudentDTO();
+studentDTO.setRollNo(fRollNo);
+studentDTO.setName(fName);
+studentDTO.setCourseCode(fCourseCode);
+studentDTO.setDateOfBirth(fDateOfBirth);
+studentDTO.setGender((fGender=='M')?GENDER.MALE:GENDER.FEMALE);
+studentDTO.setIsIndian(fIsIndian);
+studentDTO.setFees(fFees);
+studentDTO.setEnrollmentNumber(fEnrollmentNumber);
+studentDTO.setAadharCardNumber(fAadharCardNumber);
+return studentDTO;
+}
+}
+randomAccessFile.close();
+throw new DAOException("Invalid enrollment number: "+enrollmentNumber);
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public StudentDTOInterface getByAadharCardNumber(String aadharCardNumber) throws DAOException
 {
-throw new DAOException("Not yet implemented");
+if(aadharCardNumber==null) throw new DAOException("Aadhar card number is null");
+aadharCardNumber=aadharCardNumber.trim();
+if(aadharCardNumber.length()==0) throw new DAOException("Length of aadhar card number cannot be zero");
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+String fRollNo;
+String fName;
+int fCourseCode;
+Date fDateOfBirth;
+char fGender;
+boolean fIsIndian;
+BigDecimal fFees;
+String fEnrollmentNumber;
+String fAadharCardNumber;
+long foundAt=0;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+foundAt=randomAccessFile.getFilePointer();
+for(int x=0;x<8;x++) randomAccessFile.readLine();
+fAadharCardNumber=randomAccessFile.readLine(); 
+if(fAadharCardNumber.equalsIgnoreCase(aadharCardNumber))
+{
+randomAccessFile.seek(foundAt);
+fRollNo = randomAccessFile.readLine();
+fName = randomAccessFile.readLine();
+fCourseCode = Integer.parseInt(randomAccessFile.readLine());
+try
+{
+fDateOfBirth = simpleDateFormat.parse(randomAccessFile.readLine());
+}catch(ParseException parseException)
+{
+throw new DAOException(parseException.getMessage());
+}
+fGender = randomAccessFile.readLine().charAt(0);
+fIsIndian = Boolean.parseBoolean(randomAccessFile.readLine());
+fFees = new BigDecimal(randomAccessFile.readLine());
+fEnrollmentNumber = randomAccessFile.readLine(); 
+fAadharCardNumber = randomAccessFile.readLine(); //re-reading just for clarity
+StudentDTOInterface studentDTO = new StudentDTO();
+studentDTO.setRollNo(fRollNo);
+studentDTO.setName(fName);
+studentDTO.setCourseCode(fCourseCode);
+studentDTO.setDateOfBirth(fDateOfBirth);
+studentDTO.setGender((fGender=='M')?GENDER.MALE:GENDER.FEMALE);
+studentDTO.setIsIndian(fIsIndian);
+studentDTO.setFees(fFees);
+studentDTO.setEnrollmentNumber(fEnrollmentNumber);
+studentDTO.setAadharCardNumber(fAadharCardNumber);
+return studentDTO;
+}
+}
+randomAccessFile.close();
+throw new DAOException("Invalid aadhar card number: "+aadharCardNumber);
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public boolean rollNoExists(String rollNo) throws DAOException
 {
-throw new DAOException("Not yet implemented");
+if(rollNo==null) return false;
+rollNo=rollNo.trim();
+if(rollNo.length()==0) return false;
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+String fRollNo;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+fRollNo=randomAccessFile.readLine();
+if(fRollNo.equalsIgnoreCase(rollNo))
+{
+return true;
+}
+for(int x=0;x<8;x++) randomAccessFile.readLine();
+}
+randomAccessFile.close();
+return false;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public boolean enrollmentNumberExists(String enrollmentNumber) throws DAOException
 {
-throw new DAOException("Not yet implemented");
+if(enrollmentNumber==null) return false;
+enrollmentNumber=enrollmentNumber.trim();
+if(enrollmentNumber.length()==0) return false;
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+String fEnrollmentNumber;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+for(int x=0;x<7;x++) randomAccessFile.readLine();
+fEnrollmentNumber=randomAccessFile.readLine();
+randomAccessFile.readLine(); //aadharCard
+if(fEnrollmentNumber.equalsIgnoreCase(enrollmentNumber))
+{
+return true;
+}
+}
+randomAccessFile.close();
+return false;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public boolean aadharCardNumberExists(String aadharCardNumber) throws DAOException
 {
-throw new DAOException("Not yet implemented");
+if(aadharCardNumber==null) return false;
+aadharCardNumber=aadharCardNumber.trim();
+if(aadharCardNumber.length()==0) return false;
+try
+{
+File file = new File(FILE_NAME);
+RandomAccessFile randomAccessFile;
+randomAccessFile = new RandomAccessFile(file,"rw");
+randomAccessFile.readLine();
+randomAccessFile.readLine();
+String fAadharCardNumber;
+while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+{
+for(int x=0;x<8;x++) randomAccessFile.readLine();
+fAadharCardNumber=randomAccessFile.readLine(); 
+if(fAadharCardNumber.equalsIgnoreCase(aadharCardNumber))
+{
+return true;
+}
+}
+randomAccessFile.close();
+return false;
+}catch(IOException ioException)
+{
+throw new DAOException(ioException.getMessage());
+}
 }
 public int getCount() throws DAOException
 {
