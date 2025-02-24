@@ -191,11 +191,13 @@ TreeSet<CourseDTOInterface> treeSet1 = new TreeSet<>();
 try
 {
 File file = new File(FILE_NAME);
+if(file.exists()==false) return treeSet1;
 RandomAccessFile randomAccessFile;
 randomAccessFile = new RandomAccessFile(file,"rw");
 if(file.length()==0)
 {
-throw new DAOException("File is empty");
+randomAccessFile.close();
+return treeSet1;
 }
 randomAccessFile.readLine(); //read header
 randomAccessFile.readLine();

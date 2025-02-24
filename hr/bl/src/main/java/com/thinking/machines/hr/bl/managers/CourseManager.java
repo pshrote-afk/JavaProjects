@@ -26,22 +26,22 @@ return courseManager;
 }
 private void populateDataStructures() throws BLException
 {
-Map<Integer,CourseInterface> codeWiseCoursesMap = new TreeMap<>();
-titleWiseCoursesMap = new TreeMap<>();
-coursesSet = new TreeSet<>();
+this.codeWiseCoursesMap = new TreeMap<>();
+this.titleWiseCoursesMap = new TreeMap<>();
+this.coursesSet = new TreeSet<>();
 try
 {
 CourseDAOInterface courseDAO = new CourseDAO();
-Set<CourseDTOInterface> courses = courseDAO.getAll();
-CourseInterface dsCourse;
-for(CourseDTOInterface courseDTO:courses)
+Set<CourseDTOInterface> dlCourses = courseDAO.getAll();
+CourseInterface course;
+for(CourseDTOInterface courseDTO:dlCourses)
 {
-dsCourse = new Course();
-dsCourse.setCode(courseDTO.getCode());
-dsCourse.setTitle(courseDTO.getTitle());
-codeWiseCoursesMap.put(courseDTO.getCode(),dsCourse);
-titleWiseCoursesMap.put(courseDTO.getTitle(),dsCourse);
-coursesSet.add(dsCourse);
+course = new Course();
+course.setCode(courseDTO.getCode());
+course.setTitle(courseDTO.getTitle());
+this.codeWiseCoursesMap.put(courseDTO.getCode(),course);
+this.titleWiseCoursesMap.put(courseDTO.getTitle().toUpperCase(),course);
+this.coursesSet.add(course);
 }
 }catch(DAOException daoException)
 {
@@ -54,8 +54,52 @@ throw blException;
 public void addCourse(CourseInterface course) throws BLException
 {
 BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
+//validate
+int code = course.getCode();
+if(code!=0) blException.addException("code","code should be zero");
+String title = course.getTitle();
+if(title==null) 
+{
+blException.addException("title","title required");
+title="";
+}
+else
+{
+title=title.trim();
+if(title.length()==0) blException.addException("title","title required");
+}
+if(title.length()>0)
+{
+if(titleWiseCoursesMap.containsKey(title.toUpperCase()))
+{
+blException.addException("title","Designation: " + title + " already exists");
+}
+}
+if(blException.hasExceptions())
+{
 throw blException;
+}
+try
+{
+CourseDAOInterface courseDAO = new CourseDAO();
+CourseDTOInterface courseDTO = new CourseDTO();
+courseDTO.setTitle(title);
+courseDAO.add(courseDTO);
+//control reaches here means successfully added in data layer
+code = courseDTO.getCode();
+course.setCode(code);
+//we make a new object right? Yes, sir.
+CourseInterface dsCourse = new Course();
+dsCourse.setCode(code);
+dsCourse.setTitle(title);
+this.codeWiseCoursesMap.put(code,dsCourse);
+this.titleWiseCoursesMap.put(title.toUpperCase(),dsCourse);
+this.coursesSet.add(dsCourse);
+}catch(DAOException daoException)
+{
+blException.setGenericException(daoException.getMessage());
+throw blException;
+}
 }
 public void updateCourse(CourseInterface course) throws BLException
 {
