@@ -9,28 +9,22 @@ import com.thinking.machines.hr.dl.interfaces.dto.*;
 import com.thinking.machines.hr.dl.dao.*;
 import com.thinking.machines.hr.dl.dto.*;
 import com.thinking.machines.hr.dl.exceptions.*;
-public class CourseAddCourseTestCase
+public class CourseManagerGetCourseByTitleTestCase
 {
 public static void main(String gg[])
 {
 try
 {
-CourseInterface course = new Course();
-course.setTitle("Clerk");
-
+String title = gg[0];
 CourseManagerInterface courseManager = CourseManager.getCourseManager();
-courseManager.addCourse(course);
-
+CourseInterface course = courseManager.getCourseByTitle(title);
+System.out.println("Code: ("+course.getCode()+"), Title: ("+course.getTitle()+")");
 }catch(BLException blException)
 {
-List<String> properties = blException.getProperties();
-for(String property:properties)
+if(blException.hasGenericException())
 {
-String exception = blException.getException(property);
-System.out.println(exception);
+System.out.println(blException.getGenericException());
 }
-
 }
-
 }
 }

@@ -104,49 +104,151 @@ throw blException;
 public void updateCourse(CourseInterface course) throws BLException
 {
 BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
+if(course==null)
+{
+blException.setGenericException("Course required");
 throw blException;
+}
+int code = course.getCode();
+String title = course.getTitle();
+if(code<=0) blException.addException("code","Invalid code: "+code);
+if(code>0)
+{
+if(this.codeWiseCoursesMap.containsKey(code)==false)
+{
+blException.addException("code","Invalid code: "+code);
+throw blException;
+}
+}
+if(title==null) 
+{
+blException.addException("title","title required");
+title="";
+}
+else
+{
+title=title.trim();
+if(title.length()==0) 
+{
+blException.addException("title","title required");
+}
+}
+if(title.length()>0)
+{
+CourseInterface tmpCourse;
+tmpCourse = titleWiseCoursesMap.get(title.toUpperCase());
+if(tmpCourse!=null && tmpCourse.getCode()!=code)
+{
+blException.addException("title","Designation: "+title+" already exists");
+}
+}
+if(blException.hasExceptions())
+{
+throw blException;
+}
+try
+{
+CourseInterface dsCourse = codeWiseCoursesMap.get(code);
+CourseDTOInterface courseDTO = new CourseDTO();
+courseDTO.setCode(code);
+courseDTO.setTitle(title);
+new CourseDAO().update(courseDTO);
+//control reaches here means successfully updated. hence, remove old DS entries
+codeWiseCoursesMap.remove(code);
+titleWiseCoursesMap.remove(dsCourse.getTitle().toUpperCase());
+coursesSet.remove(dsCourse);
+//update DS object
+dsCourse.setTitle(title);
+//update DS
+codeWiseCoursesMap.put(code,dsCourse);
+titleWiseCoursesMap.put(title.toUpperCase(),dsCourse);
+coursesSet.add(dsCourse);
+}catch(DAOException daoException)
+{
+blException.setGenericException(daoException.getMessage());
+}
 }
 public void removeCourse(int code) throws BLException
 {
 BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
+if(code<=0) 
+{
+blException.addException("code","Invalid code: "+code);
+}
+if(code>0)
+{
+if(this.codeWiseCoursesMap.containsKey(code)==false)
+{
+blException.addException("code","Invalid code: "+code);
 throw blException;
+}
+}
+if(blException.hasExceptions())
+{
+throw blException;
+}
+CourseInterface tmpCourse = codeWiseCoursesMap.get(code);
+try
+{
+new CourseDAO().delete(code);
+//control reaches here means successfully deleted
+this.codeWiseCoursesMap.remove(code);
+this.titleWiseCoursesMap.remove(tmpCourse.getTitle().toUpperCase());	//replace cant be used here
+this.coursesSet.remove(tmpCourse);
+}catch(DAOException daoException)
+{
+blException.setGenericException(daoException.getMessage());
+}
 }
 public CourseInterface getCourseByCode(int code) throws BLException
 {
+CourseInterface course;
+course = codeWiseCoursesMap.get(code);
+if(course==null)
+{
 BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
+blException.addException("code","Invalid code: "+code);
 throw blException;
+}
+return course;
 }
 public CourseInterface getCourseByTitle(String title) throws BLException
 {
+CourseInterface course;
+course = titleWiseCoursesMap.get(title.toUpperCase());
+if(course==null)
+{
 BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
+blException.addException("title","Invalid title: "+title);
 throw blException;
+}
+return course;
 }
 public int getCourseCount() throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+return this.coursesSet.size();
 }
 public boolean courseCodeExists(int code) throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+return this.codeWiseCoursesMap.containsKey(code);
 }
 public boolean courseTitleExists(String title) throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+return this.titleWiseCoursesMap.containsKey(title.toUpperCase());
 }
 public Set<CourseInterface> getCourses() throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+//do not return original data structure
+//return clone of our data structure
+Set<CourseInterface> courses;
+courses = new TreeSet<>();
+
+this.coursesSet.forEach((CourseInterface course)->{
+CourseInterface tmpCourse = new Course();
+tmpCourse.setCode(course.getCode());
+tmpCourse.setTitle(course.getTitle());
+courses.add(course);
+});
+return courses;
 }
-}
+}//end of class
