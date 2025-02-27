@@ -1,9 +1,9 @@
-package com.thinking.machines.hr.dl.dto;
-import com.thinking.machines.hr.dl.interfaces.dto.*;
-import com.thinking.machines.enums.*;
+package com.thinking.machines.hr.bl.pojo;
+import com.thinking.machines.hr.bl.interfaces.pojo.*;
 import java.math.*; //for BigDecimal
 import java.util.*; //for Date class
-public class StudentDTO implements StudentDTOInterface
+import com.thinking.machines.enums.*;
+public class Student implements StudentInterface
 {
 private String rollNo;
 private String name;
@@ -14,11 +14,11 @@ private boolean isIndian;
 private BigDecimal fees;
 private String enrollmentNumber;
 private String aadharCardNumber;
-public void setRollNo(String rollNo)
+public void setRollNo(java.lang.String rollNo)
 {
 this.rollNo=rollNo;
 }
-public String getRollNo()
+public java.lang.String getRollNo()
 {
 return this.rollNo;
 }
@@ -32,7 +32,7 @@ return this.name;
 }
 public void setCourseCode(int courseCode)
 {
-this.courseCode = courseCode;
+this.courseCode=courseCode;
 }
 public int getCourseCode()
 {
@@ -46,10 +46,10 @@ public java.util.Date getDateOfBirth()
 {
 return this.dateOfBirth;
 }
-public void setGender(com.thinking.machines.enums.GENDER gender)
+public void setGender(GENDER gender)
 {
-if(gender==GENDER.MALE) this.gender = 'M';
-else this.gender = 'F';
+if(gender==GENDER.MALE) this.gender='M';
+if(gender==GENDER.FEMALE) this.gender='F';
 }
 public char getGender()
 {
@@ -81,13 +81,13 @@ return this.enrollmentNumber;
 }
 public void setAadharCardNumber(java.lang.String aadharCardNumber)
 {
-this.aadharCardNumber = aadharCardNumber;
+this.aadharCardNumber=aadharCardNumber;
 }
 public java.lang.String getAadharCardNumber()
 {
 return this.aadharCardNumber;
 }
-public StudentDTO()
+public Student()
 {
 this.rollNo=null;
 this.name=null;
@@ -99,22 +99,19 @@ this.fees=null;
 this.enrollmentNumber=null;
 this.aadharCardNumber=null;
 }
-
-public boolean equals(Object other)
-{
-if(!(other instanceof StudentDTOInterface)) return false;
-StudentDTOInterface studentDTO;
-studentDTO = (StudentDTO)other;
-return this.rollNo.equalsIgnoreCase(studentDTO.getRollNo());
-}
-public int compareTo(StudentDTOInterface other)
-{
-return this.rollNo.compareToIgnoreCase(other.getRollNo());
-}
+//3 methods
 public int hashCode()
 {
-return this.rollNo.toUpperCase().hashCode(); //Not a recursive call. We're calling hashCode() method of String.
+return this.rollNo.toUpperCase().hashCode(); //not a recursive call. We're calling hashCode() method of String class
 }
-//3 methods
+public int compareTo(StudentInterface other)
+{
+return this.rollNo.compareToIgnoreCase(other.getRollNo()); //calling compareToIgnoreCase() method of String
 }
-
+public boolean equals(Object other)
+{
+if(!(other instanceof StudentInterface)) return false;
+StudentInterface student = (StudentInterface)other;
+return this.rollNo.equalsIgnoreCase(student.getRollNo());
+}
+}
