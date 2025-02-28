@@ -87,7 +87,7 @@ courseDTO.setTitle(title);
 courseDAO.add(courseDTO);
 //control reaches here means successfully added in data layer
 code = courseDTO.getCode();
-course.setCode(code);
+course.setCode(code); //setting code in parameter variable to ensure that from where it was called we can display what code has been generated
 //we make a new object right? Yes, sir.
 CourseInterface dsCourse = new Course();
 dsCourse.setCode(code);

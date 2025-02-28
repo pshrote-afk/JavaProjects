@@ -105,7 +105,7 @@ throw new DAOException("Aadhar card number ("+aadharCardNumber+") already exists
 lastGeneratedCode++;
 recordCount++;
 String newGeneratedRollNo = "R" + lastGeneratedCode;
-studentDTO.setRollNo(newGeneratedRollNo);
+studentDTO.setRollNo(newGeneratedRollNo); //setting roll no in parameter variable so that from where it was called we can display what roll no has been generated
 randomAccessFile.writeBytes(studentDTO.getRollNo() + "\n");
 randomAccessFile.writeBytes(name + "\n");
 randomAccessFile.writeBytes(courseCode + "\n"); 

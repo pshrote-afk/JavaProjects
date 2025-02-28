@@ -21,7 +21,7 @@ course.setTitle(gg[0]);
 
 CourseManagerInterface courseManager = CourseManager.getCourseManager();
 courseManager.addCourse(course);
-System.out.println("Record added");
+System.out.println("Record added with course code: "+course.getCode());
 }catch(BLException blException)
 {
 List<String> properties = blException.getProperties();

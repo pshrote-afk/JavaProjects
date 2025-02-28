@@ -53,6 +53,7 @@ lastGeneratedCode++;
 recordCount++;
 randomAccessFile.writeBytes(lastGeneratedCode + "\n");
 randomAccessFile.writeBytes(title + "\n");
+courseDTO.setCode(lastGeneratedCode);
 //now update header
 randomAccessFile.seek(0);
 randomAccessFile.writeBytes(String.format("%-10d",lastGeneratedCode) + "\n");
