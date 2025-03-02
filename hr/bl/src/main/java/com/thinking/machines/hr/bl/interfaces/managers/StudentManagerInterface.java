@@ -8,7 +8,7 @@ public void addStudent(StudentInterface student) throws BLException;
 public void updateStudent(StudentInterface student) throws BLException;
 public void removeStudent(String rollNo) throws BLException;
 
-public Set<StudentInterface> getStudentByCourseCode(int courseCode) throws BLException;
+public Set<StudentInterface> getStudentsByCourseCode(int courseCode) throws BLException;
 public Set<StudentInterface> getStudents() throws BLException;
 
 public StudentInterface getStudentByRollNo(String rollNo) throws BLException;
