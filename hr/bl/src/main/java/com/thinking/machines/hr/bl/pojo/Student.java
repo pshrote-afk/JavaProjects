@@ -7,7 +7,7 @@ public class Student implements StudentInterface
 {
 private String rollNo;
 private String name;
-private int courseCode;
+private CourseInterface course;
 private Date dateOfBirth;
 private char gender;
 private boolean isIndian;
@@ -30,13 +30,13 @@ public java.lang.String getName()
 {
 return this.name;
 }
-public void setCourseCode(int courseCode)
+public void setCourse(CourseInterface course)
 {
-this.courseCode=courseCode;
+this.course=course;
 }
-public int getCourseCode()
+public CourseInterface getCourse()
 {
-return this.courseCode;
+return this.course;
 }
 public void setDateOfBirth(java.util.Date dateOfBirth)
 {
@@ -91,7 +91,7 @@ public Student()
 {
 this.rollNo=null;
 this.name=null;
-this.courseCode=0;
+this.course=null;
 this.dateOfBirth=null;
 this.gender=' ';
 this.isIndian=false;

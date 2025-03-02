@@ -8,8 +8,8 @@ public void setRollNo(String rollNo);
 public String getRollNo();
 public void setName(String Name);
 public String getName();
-public void setCourseCode(int courseCode);
-public int getCourseCode();
+public void setCourse(CourseInterface course);
+public CourseInterface getCourse();
 public void setDateOfBirth(Date dateOfBirth);
 public Date getDateOfBirth();
 public void setGender(GENDER gender); //GENDER is an enumerated class

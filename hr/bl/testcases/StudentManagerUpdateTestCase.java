@@ -7,52 +7,43 @@ import com.thinking.machines.enums.*;
 import java.util.*; //for List class
 import java.text.*; //for SimpleDateFormat class
 import java.math.*; //for BigDecimal class
-public class StudentManagerAddTestCase
+public class StudentManagerUpdateTestCase
 {
 public static void main(String gg[])
 {
-/*
-private String rollNo;//to be generated
-private String name;
-private int courseCode;
-private Date dateOfBirth;
-private char gender;
-private boolean isIndian;
-private BigDecimal fees;
-private String enrollmentNumber;
-private String aadharCardNumber;
-*/
 try
 {
+
 StudentInterface student;
 student = new Student();
-student.setName(gg[0]);
+student.setRollNo(gg[0]);
+student.setName(gg[1]);
 
 CourseManagerInterface courseManager = CourseManager.getCourseManager();
-CourseInterface course = courseManager.getCourseByCode(Integer.parseInt(gg[1]));
+CourseInterface course = courseManager.getCourseByCode(Integer.parseInt(gg[2]));
 student.setCourse(course);
 
 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 Date dateOfBirth = null;
 try
 {
-dateOfBirth = sdf.parse(gg[2]);
+dateOfBirth = sdf.parse(gg[3]);
 student.setDateOfBirth(dateOfBirth);
 }catch(ParseException pe)
 {
 System.out.println(pe.getMessage());
 }
-char gender = gg[3].charAt(0);
+char gender = gg[4].charAt(0);
 if(gender=='M') student.setGender(GENDER.MALE);
 if(gender=='F') student.setGender(GENDER.FEMALE);
-student.setIsIndian(Boolean.parseBoolean(gg[4]));
-student.setFees(new BigDecimal(gg[5]));
-student.setEnrollmentNumber(gg[6]);
-student.setAadharCardNumber(gg[7]);
+student.setIsIndian(Boolean.parseBoolean(gg[5]));
+student.setFees(new BigDecimal(gg[6]));
+student.setEnrollmentNumber(gg[7]);
+student.setAadharCardNumber(gg[8]);
 
 StudentManagerInterface studentManager = StudentManager.getStudentManager();
-studentManager.addStudent(student);
-System.out.println("Student added with roll no: "+student.getRollNo());
+studentManager.updateStudent(student);
+System.out.println("Student updated with roll no: "+student.getRollNo());
 }catch(BLException blException)
 {
 if(blException.hasGenericException()) System.out.println(blException.getGenericException());

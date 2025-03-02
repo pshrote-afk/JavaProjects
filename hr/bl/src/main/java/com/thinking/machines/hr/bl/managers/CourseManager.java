@@ -14,7 +14,7 @@ public class CourseManager implements CourseManagerInterface
 private Map<Integer,CourseInterface> codeWiseCoursesMap;
 private Map<String,CourseInterface> titleWiseCoursesMap;
 private Set<CourseInterface> coursesSet;
-private static CourseManagerInterface courseManager = null; 
+private static CourseManager courseManager = null; 
 private CourseManager() throws BLException
 {
 populateDataStructures();
@@ -26,8 +26,8 @@ return courseManager;
 }
 private void populateDataStructures() throws BLException
 {
-this.codeWiseCoursesMap = new TreeMap<>();
-this.titleWiseCoursesMap = new TreeMap<>();
+this.codeWiseCoursesMap = new HashMap<>();
+this.titleWiseCoursesMap = new HashMap<>();
 this.coursesSet = new TreeSet<>();
 try
 {
