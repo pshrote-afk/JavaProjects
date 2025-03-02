@@ -1,6 +1,78 @@
-10000011  
-2         
-R10000010
+10000009  
+9         
+R10000001
+Baburao Ganpat
+10
+02/07/1992
+F
+true
+5000.75
+ABC123
+UID123
+R10000002
+Lokesh Paranjape
+14
+02/07/2005
+M
+false
+5000.75
+ABC456
+UID456
+R10000003
+Shivanjali Damodar Suhasvasi
+14
+25/11/2012
+F
+true
+7500.250
+ABC789
+UID789
+R10000004
+Kuber
+13
+05/11/2002
+F
+false
+7500.250
+ABC012
+UID012
+R10000005
+Nagamani
+13
+05/11/2002
+F
+true
+7500.250
+ABC345
+UID345
+R10000006
+Manjule
+13
+05/11/2002
+F
+true
+7500.250
+ABC678
+UID678
+R10000007
+Otto von Bismarck
+10
+05/11/2002
+M
+true
+7500.250
+ABC901
+UID901
+R10000008
+Winnie the Pooh who's the Alladin of all Neverland
+10
+05/11/2002
+M
+true
+7500.250
+ABC567
+UID567
+R10000009
 Harishchandra Ramapura
 14
 19/04/2004
@@ -8,13 +80,4 @@ M
 true
 5000.33
 ABC666
-UID555
-R10000011
-Winnie boy
-10
-19/04/2004
-F
-false
-5000.33
-ABC777
-UID777
+UID666

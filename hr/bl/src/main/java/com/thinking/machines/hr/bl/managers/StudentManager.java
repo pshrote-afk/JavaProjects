@@ -402,15 +402,25 @@ throw blException;
 
 public Set<StudentInterface> getStudentsByCourseCode(int courseCode) throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+Set<StudentInterface> treeSet = new TreeSet<>();
+for(StudentInterface student:this.studentsSet)
+{
+if(student.getCourse().getCode()==courseCode)
+{
+treeSet.add(student);
+}
+}
+return treeSet;
 }
 public Set<StudentInterface> getStudents() throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+Set<StudentInterface> treeSet = new TreeSet<>();
+for(StudentInterface student:this.studentsSet)
+{
+treeSet.add(student);
+}
+return treeSet;
+//doubt: this much precaution necessary? is IOException the correct one to catch?
 }
 
 public StudentInterface getStudentByRollNo(String rollNo) throws BLException
