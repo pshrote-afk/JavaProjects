@@ -318,7 +318,7 @@ throw blException;
 try
 {
 StudentDTOInterface studentDTO = new StudentDTO();
-studentDTO.setRollNo(rollNo); 
+studentDTO.setRollNo(rollNo); //doubt: error. we should not set the rollno being passed. we should set the rollno that exists in ds
 studentDTO.setName(name);
 studentDTO.setCourseCode(courseCode);
 studentDTO.setDateOfBirth(dateOfBirth);
@@ -426,57 +426,120 @@ return treeSet;
 public StudentInterface getStudentByRollNo(String rollNo) throws BLException
 {
 BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
+StudentInterface student;
+student = this.rollNoWiseStudentsMap.get(rollNo.toUpperCase());
+if(student==null) //that is if it finds nothing
+{
+blException.setGenericException("Invalid rollNo: "+rollNo);
 throw blException;
+}
+else
+{
+StudentInterface tmpStudent = new Student();
+tmpStudent.setRollNo(student.getRollNo());
+tmpStudent.setName(student.getName());
+tmpStudent.setCourse(student.getCourse());
+tmpStudent.setDateOfBirth(student.getDateOfBirth());
+char gender = student.getGender();
+tmpStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE);
+tmpStudent.setIsIndian(student.getIsIndian());
+tmpStudent.setFees(student.getFees());
+tmpStudent.setEnrollmentNumber(student.getEnrollmentNumber());
+tmpStudent.setAadharCardNumber(student.getAadharCardNumber());
+return tmpStudent;
+}
 }
 public StudentInterface getStudentByEnrollmentNumber(String enrollmentNumber) throws BLException
 {
 BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
+StudentInterface student;
+student = this.enrollmentNumberWiseStudentsMap.get(enrollmentNumber.toUpperCase());
+if(student==null) //that is if it finds nothing
+{
+blException.setGenericException("Invalid enrollment number: "+enrollmentNumber);
 throw blException;
+}
+else
+{
+StudentInterface tmpStudent = new Student();
+tmpStudent.setRollNo(student.getRollNo());
+tmpStudent.setName(student.getName());
+tmpStudent.setCourse(student.getCourse());
+tmpStudent.setDateOfBirth(student.getDateOfBirth());
+char gender = student.getGender();
+tmpStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE);
+tmpStudent.setIsIndian(student.getIsIndian());
+tmpStudent.setFees(student.getFees());
+tmpStudent.setEnrollmentNumber(student.getEnrollmentNumber());
+tmpStudent.setAadharCardNumber(student.getAadharCardNumber());
+return tmpStudent;
+}
 }
 public StudentInterface getStudentByAadharCardNumber(String aadharCardNumber) throws BLException
 {
 BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
+StudentInterface student;
+student = this.aadharCardNumberWiseStudentsMap.get(aadharCardNumber.toUpperCase());
+if(student==null) //that is if it finds nothing
+{
+blException.setGenericException("Invalid aadhar card number: "+aadharCardNumber);
 throw blException;
+}
+else
+{
+StudentInterface tmpStudent = new Student();
+tmpStudent.setRollNo(student.getRollNo());
+tmpStudent.setName(student.getName());
+tmpStudent.setCourse(student.getCourse());
+tmpStudent.setDateOfBirth(student.getDateOfBirth());
+char gender = student.getGender();
+tmpStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE);
+tmpStudent.setIsIndian(student.getIsIndian());
+tmpStudent.setFees(student.getFees());
+tmpStudent.setEnrollmentNumber(student.getEnrollmentNumber());
+tmpStudent.setAadharCardNumber(student.getAadharCardNumber());
+return tmpStudent;
+}
 }
 
 public boolean isCourseAllotted(int courseCode) throws BLException
 {
 BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+boolean isCourseAllotted;
+CourseManagerInterface courseManager = CourseManager.getCourseManager();
+isCourseAllotted = courseManager.courseCodeExists(courseCode);
+return isCourseAllotted;
+
+//doubt: no catch DAOException?
 }
 public boolean studentRollNoExists(String rollNo) throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+return this.rollNoWiseStudentsMap.containsKey(rollNo.toUpperCase());
 }
 public boolean studentEnrollmentNumberExists(String enrollmentNumber) throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+return this.enrollmentNumberWiseStudentsMap.containsKey(enrollmentNumber.toUpperCase());
 }
 public boolean studentAadharCardNumberExists(String aadharCardNumber) throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+return this.aadharCardNumberWiseStudentsMap.containsKey(aadharCardNumber.toUpperCase());
 }
 
 public int getStudentCount() throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+return this.studentsSet.size();
 }
 public int getStudentCountByCourse(int courseCode) throws BLException
 {
-BLException blException = new BLException();
-blException.setGenericException("not yet implemented");
-throw blException;
+int count = 0;
+for(StudentInterface student:this.studentsSet)
+{
+if(student.getCourse().getCode()==courseCode)
+{
+count++;
 }
 }
+return count;
+}
+
+}//end of StudentManager.java class
