@@ -28,8 +28,8 @@ StudentInterface student;
 student = new Student();
 student.setName(gg[0]);
 
-CourseManagerInterface courseManager = CourseManager.getCourseManager();
-CourseInterface course = courseManager.getCourseByCode(Integer.parseInt(gg[1]));
+CourseInterface course = new Course();
+course.setCode(Integer.parseInt(gg[1]));
 student.setCourse(course);
 
 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");

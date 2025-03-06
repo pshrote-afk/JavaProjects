@@ -84,45 +84,53 @@ private BigDecimal fees;
 private String enrollmentNumber;
 private String aadharCardNumber;
 */
+
 public void addStudent(StudentInterface student) throws BLException
 {
 BLException blException = new BLException();
 String rollNo = student.getRollNo();
 if(rollNo!=null) 
 {
-blException.addException("rollNo","Roll no should be null, or should not be passed"); //doubt: what error message?
+rollNo=rollNo.trim();
+if(rollNo.length()>0)
+{
+blException.addException("rollNo","Roll no should be null, or should not be passed"); 
+}
 }
 String name = student.getName();
 if(name==null) 
 {
-blException.addException("name","Name is null");
-name=""; //so that it doesnt get stuck in next if()
+blException.addException("name","Name required");
 }
-if(name.length()>0)
+else
 {
 name=name.trim();
-if(name.length()==0) //doubt: name validations are enough?
+if(name.length()==0) //doubt: name validations are enough? Yes. they're enough
 {
-blException.addException("name","Length of name is zero");
+blException.addException("name","Name required");
 }
 }
 
 CourseManagerInterface courseManager = CourseManager.getCourseManager(); //for checking if course code exists in Courses
 CourseInterface course;
+int courseCode=0;
 course = student.getCourse();
-int courseCode = course.getCode(); //doubt: no need to verify code, cause we have pulled it out of BL data structure
-if(courseCode<=0) 
+if(course==null)
 {
-blException.addException("courseCode","Course code should be zero");
+blException.addException("course","Course required");
 }
-else if(courseManager.courseCodeExists(courseCode)==false) //doubt: else block is correct?
+else 
+{
+courseCode=course.getCode();
+if(courseManager.courseCodeExists(courseCode)==false) //doubt: else block is correct? Yes, correct.
 {
 blException.addException("courseCode","Invalid course code: "+courseCode);
+}
 }
 Date dateOfBirth = student.getDateOfBirth();
 if(dateOfBirth==null) 
 {
-blException.addException("dateOfBirth","Date of birth is null");
+blException.addException("dateOfBirth","Date of birth required");
 }
 char gender = student.getGender();
 if(!(gender=='M' || gender=='F'))
@@ -133,44 +141,47 @@ boolean isIndian = student.getIsIndian();
 BigDecimal fees = student.getFees();
 if(fees==null)
 {
-blException.addException("fees","Fees is null");
+blException.addException("fees","Fees required");
+}
+else
+{
+if(fees.signum()==-1)
+{
+blException.addException("fees","Fees cannot be negative");
+}
 }
 String enrollmentNumber = student.getEnrollmentNumber();
 if(enrollmentNumber==null) 
 {
 blException.addException("enrollmentNumber","Enrollment number is null");
-enrollmentNumber=""; //so that it doesnt get stuck in next if()
 }
-if(enrollmentNumber.length()>0)
+else
 {
 enrollmentNumber=enrollmentNumber.trim();
-if(enrollmentNumber.length()==0) //doubt: name validations are enough?
+if(enrollmentNumber.length()==0) 
 {
-blException.addException("enrollmentNumber","Length of enrollment number is zero");
+blException.addException("enrollmentNumber","Enrollment number required");
 }
 else if(enrollmentNumberWiseStudentsMap.containsKey(enrollmentNumber.toUpperCase())) //check if enrollment and aadhar are unique
 {
-StudentInterface tmpStudent = enrollmentNumberWiseStudentsMap.get(enrollmentNumber.toUpperCase());
-blException.addException("enrollmentNumber","Enrollment number already exists against roll no: "+tmpStudent.getRollNo());
+blException.addException("enrollmentNumber","Enrollment number "+enrollmentNumber+" already exists");
 }
 }
 String aadharCardNumber = student.getAadharCardNumber();
 if(aadharCardNumber==null) 
 {
-blException.addException("aadharCardNumber","Aadhar card number is null");
-aadharCardNumber=""; //so that it doesnt get stuck in next if()
+blException.addException("aadharCardNumber","Aadhar card number required");
 }
-if(aadharCardNumber.length()>0)
+else
 {
 aadharCardNumber=aadharCardNumber.trim();
-if(aadharCardNumber.length()==0) //doubt: name validations are enough?
+if(aadharCardNumber.length()==0) 
 {
-blException.addException("aadharCardNumber","Length of aadhar card number is zero");
+blException.addException("aadharCardNumber","Aadhar card number required");
 }
 else if(aadharCardNumberWiseStudentsMap.containsKey(aadharCardNumber.toUpperCase())) //check if enrollment and aadhar are unique
 {
-StudentInterface tmpStudent = aadharCardNumberWiseStudentsMap.get(aadharCardNumber.toUpperCase());
-blException.addException("aadharCardNumber","Aadhar card number already exists against roll no: "+tmpStudent.getRollNo());
+blException.addException("aadharCardNumber","Aadhar card number "+aadharCardNumber+" already exists");
 }
 }
 if(blException.hasExceptions())
@@ -186,7 +197,7 @@ studentDTO.setCourseCode(courseCode);
 studentDTO.setDateOfBirth(dateOfBirth);
 studentDTO.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE); 
 studentDTO.setIsIndian(isIndian);
-studentDTO.setFees(fees); 		//doubt
+studentDTO.setFees(fees); 		//doubt. It's correct. Fees is of BigDecimal type, which is also the type that needs to be passed
 studentDTO.setEnrollmentNumber(enrollmentNumber);
 studentDTO.setAadharCardNumber(aadharCardNumber);
 new StudentDAO().add(studentDTO);
@@ -195,7 +206,12 @@ student.setRollNo(studentDTO.getRollNo()); //setting roll no into parameter obje
 StudentInterface blStudent = new Student();
 blStudent.setRollNo(studentDTO.getRollNo());
 blStudent.setName(name);
-blStudent.setCourse(course);
+
+//getting original Course object for setting into Student. For that we'll temporarily typecast because the "interface" pointer does not know this method which is only in its implementation
+CourseInterface originalCourse;
+originalCourse = ((CourseManager)courseManager).getDSCourseByCode(course.getCode());
+blStudent.setCourse(originalCourse);
+
 blStudent.setDateOfBirth(dateOfBirth);
 blStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE); //if condition is true, first value will be assigned, else second value will be assigned 
 blStudent.setIsIndian(isIndian);
@@ -203,10 +219,10 @@ blStudent.setFees(fees); 		//doubt
 blStudent.setEnrollmentNumber(enrollmentNumber);
 blStudent.setAadharCardNumber(aadharCardNumber);
 //add to DS
-this.rollNoWiseStudentsMap.put(blStudent.getRollNo(),blStudent);
-this.enrollmentNumberWiseStudentsMap.put(enrollmentNumber,blStudent);
-this.aadharCardNumberWiseStudentsMap.put(aadharCardNumber,blStudent);
-this.studentsSet.add(blStudent);
+this.rollNoWiseStudentsMap.put(blStudent.getRollNo().toUpperCase(),blStudent);
+this.enrollmentNumberWiseStudentsMap.put(enrollmentNumber.toUpperCase(),blStudent);
+this.aadharCardNumberWiseStudentsMap.put(aadharCardNumber.toUpperCase(),blStudent);
+this.studentsSet.add(blStudent); 
 }catch(DAOException daoException)
 {
 blException.setGenericException(daoException.getMessage());
@@ -219,48 +235,57 @@ BLException blException = new BLException();
 String rollNo = student.getRollNo();
 if(rollNo==null) 
 {
-blException.addException("rollNo","Roll no is null");
-rollNo= ""; //doubt
+blException.addException("rollNo","Roll no required");
+throw blException;
 }
-if(rollNo.length()>0)
+else
 {
 rollNo = rollNo.trim();
 if(rollNo.length()==0) 
 {
-blException.addException("rollNo","Length of roll no is zero");
+blException.addException("rollNo","Roll no required");
+throw blException;
 }
 else if(rollNoWiseStudentsMap.containsKey(rollNo.toUpperCase())==false)
 {
 blException.addException("rollNo","Invalid roll no: "+rollNo);
+throw blException;
 }
 }
 String name = student.getName();
 if(name==null) 
 {
-blException.addException("name","Name is null");
-name=""; //so that it doesnt get stuck in next if()
+blException.addException("name","Name required");
 }
-if(name.length()>0)
+else
 {
 name=name.trim();
-if(name.length()==0) //doubt: name validations are enough?
+if(name.length()==0) 
 {
-blException.addException("name","Length of name is zero");
+blException.addException("name","Name required");
 }
 }
 
 CourseManagerInterface courseManager = CourseManager.getCourseManager(); //for checking if course code exists in Courses
 CourseInterface course;
+int courseCode=0;
 course = student.getCourse();
-int courseCode = course.getCode();
-if(courseManager.courseCodeExists(courseCode)==false)
+if(course==null)
+{
+blException.addException("course","Course required");
+}
+else 
+{
+courseCode=course.getCode();
+if(courseManager.courseCodeExists(courseCode)==false) //doubt: else block is correct? Yes, correct.
 {
 blException.addException("courseCode","Invalid course code: "+courseCode);
+}
 }
 Date dateOfBirth = student.getDateOfBirth();
 if(dateOfBirth==null) 
 {
-blException.addException("dateOfBirth","Date of birth is null");
+blException.addException("dateOfBirth","Date of birth required");
 }
 char gender = student.getGender();
 if(!(gender=='M' || gender=='F'))
@@ -271,44 +296,55 @@ boolean isIndian = student.getIsIndian();
 BigDecimal fees = student.getFees();
 if(fees==null)
 {
-blException.addException("fees","Fees is null");
+blException.addException("fees","Fees required");
+}
+else
+{
+if(fees.signum()==-1)
+{
+blException.addException("fees","Fees cannot be negative");
+}
 }
 String enrollmentNumber = student.getEnrollmentNumber();
 if(enrollmentNumber==null) 
 {
-blException.addException("enrollmentNumber","Enrollment number is null");
-enrollmentNumber=""; //so that it doesnt get stuck in next if()
+blException.addException("enrollmentNumber","Enrollment number required");
 }
-if(enrollmentNumber.length()>0)
+else
 {
 enrollmentNumber=enrollmentNumber.trim();
 if(enrollmentNumber.length()==0) //doubt: name validations are enough?
 {
-blException.addException("enrollmentNumber","Length of enrollment number is zero");
+blException.addException("enrollmentNumber","Enrollment number required");
 }
+else
+{
 StudentInterface tmpStudent = enrollmentNumberWiseStudentsMap.get(enrollmentNumber.toUpperCase());
 if(tmpStudent!=null && tmpStudent.getRollNo().equalsIgnoreCase(rollNo)==false) //check if enrollment and aadhar are unique
 {
-blException.addException("enrollmentNumber","Enrollment number already exists against roll no: "+tmpStudent.getRollNo());
+blException.addException("enrollmentNumber","Enrollment number "+enrollmentNumber+" already exists");
+}
 }
 }
 String aadharCardNumber = student.getAadharCardNumber();
 if(aadharCardNumber==null) 
 {
-blException.addException("aadharCardNumber","Aadhar card number is null");
-aadharCardNumber=""; //so that it doesnt get stuck in next if()
+blException.addException("aadharCardNumber","Aadhar card number required");
 }
-if(aadharCardNumber.length()>0)
+else
 {
 aadharCardNumber=aadharCardNumber.trim();
 if(aadharCardNumber.length()==0) //doubt: name validations are enough?
 {
-blException.addException("aadharCardNumber","Length of aadhar card number is zero");
+blException.addException("aadharCardNumber","Aadhar card number required");
 }
+else
+{
 StudentInterface tmpStudent = aadharCardNumberWiseStudentsMap.get(aadharCardNumber.toUpperCase()); //Map.get() returns null if it finds nothing
 if(tmpStudent!=null && tmpStudent.getRollNo().equalsIgnoreCase(rollNo)==false) //check if enrollment and aadhar are unique
 {
-blException.addException("aadharCardNumber","Aadhar card number already exists against roll no: "+tmpStudent.getRollNo());
+blException.addException("aadharCardNumber","Aadhar card number "+aadharCardNumber+" already exists");
+}
 }
 }
 if(blException.hasExceptions())
@@ -317,8 +353,14 @@ throw blException;
 }
 try
 {
+//for remove purposes
+StudentInterface dsStudent;
+dsStudent = this.rollNoWiseStudentsMap.get(rollNo.toUpperCase());
+String oldEnrollmentNumber = dsStudent.getEnrollmentNumber();
+String oldAadharCardNumber = dsStudent.getAadharCardNumber();
+
 StudentDTOInterface studentDTO = new StudentDTO();
-studentDTO.setRollNo(rollNo); //doubt: error. we should not set the rollno being passed. we should set the rollno that exists in ds
+studentDTO.setRollNo(dsStudent.getRollNo()); //doubt: error. we should not set the rollno being passed. we should set the rollno that exists in ds
 studentDTO.setName(name);
 studentDTO.setCourseCode(courseCode);
 studentDTO.setDateOfBirth(dateOfBirth);
@@ -330,26 +372,24 @@ studentDTO.setAadharCardNumber(aadharCardNumber);
 new StudentDAO().update(studentDTO);
 //creating a fresh new object to add into our DS
 StudentInterface blStudent = new Student();
-blStudent.setRollNo(rollNo);
+blStudent.setRollNo(studentDTO.getRollNo());
 blStudent.setName(name);
 blStudent.setCourse(course);
 blStudent.setDateOfBirth(dateOfBirth);
 blStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE); //if condition is true, first value will be assigned, else second value will be assigned 
 blStudent.setIsIndian(isIndian);
-blStudent.setFees(fees); 		//doubt
+blStudent.setFees(fees); 
 blStudent.setEnrollmentNumber(enrollmentNumber);
 blStudent.setAadharCardNumber(aadharCardNumber);
 //remove from DS
-StudentInterface tmpStudent;
-tmpStudent = rollNoWiseStudentsMap.get(rollNo.toUpperCase());
-rollNoWiseStudentsMap.remove(rollNo);
-enrollmentNumberWiseStudentsMap.remove(enrollmentNumber);
-aadharCardNumberWiseStudentsMap.remove(aadharCardNumber);
-studentsSet.remove(tmpStudent); 
+rollNoWiseStudentsMap.remove(dsStudent.getRollNo());
+enrollmentNumberWiseStudentsMap.remove(oldEnrollmentNumber);
+aadharCardNumberWiseStudentsMap.remove(oldAadharCardNumber);
+studentsSet.remove(dsStudent); 
 //add to DS
-this.rollNoWiseStudentsMap.put(blStudent.getRollNo(),blStudent);
-this.enrollmentNumberWiseStudentsMap.put(blStudent.getEnrollmentNumber(),blStudent); //enter into DS according to new enrollment/aadhar field
-this.aadharCardNumberWiseStudentsMap.put(blStudent.getAadharCardNumber(),blStudent);
+this.rollNoWiseStudentsMap.put(blStudent.getRollNo().toUpperCase(),blStudent); //uppercasing as a precaution
+this.enrollmentNumberWiseStudentsMap.put(blStudent.getEnrollmentNumber().toUpperCase(),blStudent); //enter into DS according to new enrollment/aadhar field
+this.aadharCardNumberWiseStudentsMap.put(blStudent.getAadharCardNumber().toUpperCase(),blStudent);
 this.studentsSet.add(blStudent);
 }catch(DAOException daoException)
 {
@@ -359,42 +399,45 @@ throw blException;
 }
 public void removeStudent(String rollNo) throws BLException
 {
-BLException blException = new BLException();
 if(rollNo==null) 
 {
-blException.addException("rollNo","Roll no is null");
-rollNo= ""; //doubt
+BLException blException = new BLException();
+blException.addException("rollNo","Roll no required");
+throw blException;
 }
-if(rollNo.length()>0)
+else
 {
 rollNo = rollNo.trim();
 if(rollNo.length()==0) 
 {
-blException.addException("rollNo","Length of roll no is zero");
+BLException blException = new BLException();
+blException.addException("rollNo","Roll no required");
+throw blException;
 }
 else if(rollNoWiseStudentsMap.containsKey(rollNo.toUpperCase())==false)
 {
+BLException blException = new BLException();
 blException.addException("rollNo","Invalid roll no: "+rollNo);
-}
-}
-if(blException.hasExceptions())
-{
 throw blException;
 }
-StudentInterface student = rollNoWiseStudentsMap.get(rollNo.toUpperCase());
-String enrollmentNumber = student.getEnrollmentNumber();
-String aadharCardNumber = student.getAadharCardNumber();
+}
 try
 {
-new StudentDAO().delete(rollNo);
+//for remove purposes
+StudentInterface dsStudent;
+dsStudent = this.rollNoWiseStudentsMap.get(rollNo.toUpperCase());
+String oldEnrollmentNumber = dsStudent.getEnrollmentNumber();
+String oldAadharCardNumber = dsStudent.getAadharCardNumber();
+
+new StudentDAO().delete(dsStudent.getRollNo());
 //remove from DS
-rollNoWiseStudentsMap.remove(rollNo);
-enrollmentNumberWiseStudentsMap.remove(enrollmentNumber);
-aadharCardNumberWiseStudentsMap.remove(aadharCardNumber);
-studentsSet.remove(student); 
-//add to DS
+rollNoWiseStudentsMap.remove(dsStudent.getRollNo());
+enrollmentNumberWiseStudentsMap.remove(oldEnrollmentNumber);
+aadharCardNumberWiseStudentsMap.remove(oldAadharCardNumber);
+studentsSet.remove(dsStudent); 
 }catch(DAOException daoException)
 {
+BLException blException = new BLException();
 blException.setGenericException(daoException.getMessage());
 throw blException;
 }
@@ -412,7 +455,7 @@ treeSet.add(student);
 }
 return treeSet;
 }
-public Set<StudentInterface> getStudents() throws BLException
+public Set<StudentInterface> getStudents()
 {
 Set<StudentInterface> treeSet = new TreeSet<>();
 for(StudentInterface student:this.studentsSet)
@@ -438,7 +481,7 @@ else
 StudentInterface tmpStudent = new Student();
 tmpStudent.setRollNo(student.getRollNo());
 tmpStudent.setName(student.getName());
-tmpStudent.setCourse(student.getCourse());
+tmpStudent.setCourse(student.getCourse()); //error: set duplicate of Course
 tmpStudent.setDateOfBirth(student.getDateOfBirth());
 char gender = student.getGender();
 tmpStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE);
@@ -512,20 +555,20 @@ return isCourseAllotted;
 
 //doubt: no catch DAOException?
 }
-public boolean studentRollNoExists(String rollNo) throws BLException
+public boolean studentRollNoExists(String rollNo)
 {
 return this.rollNoWiseStudentsMap.containsKey(rollNo.toUpperCase());
 }
-public boolean studentEnrollmentNumberExists(String enrollmentNumber) throws BLException
+public boolean studentEnrollmentNumberExists(String enrollmentNumber)
 {
 return this.enrollmentNumberWiseStudentsMap.containsKey(enrollmentNumber.toUpperCase());
 }
-public boolean studentAadharCardNumberExists(String aadharCardNumber) throws BLException
+public boolean studentAadharCardNumberExists(String aadharCardNumber)
 {
 return this.aadharCardNumberWiseStudentsMap.containsKey(aadharCardNumber.toUpperCase());
 }
 
-public int getStudentCount() throws BLException
+public int getStudentCount()
 {
 return this.studentsSet.size();
 }

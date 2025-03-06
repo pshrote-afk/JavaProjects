@@ -9,17 +9,17 @@ public void updateStudent(StudentInterface student) throws BLException;
 public void removeStudent(String rollNo) throws BLException;
 
 public Set<StudentInterface> getStudentsByCourseCode(int courseCode) throws BLException;
-public Set<StudentInterface> getStudents() throws BLException;
+public Set<StudentInterface> getStudents();
 
 public StudentInterface getStudentByRollNo(String rollNo) throws BLException;
 public StudentInterface getStudentByEnrollmentNumber(String enrollmentNumber) throws BLException;
 public StudentInterface getStudentByAadharCardNumber(String aadharCardNumber) throws BLException;
 
 public boolean isCourseAllotted(int courseCode) throws BLException;
-public boolean studentRollNoExists(String rollNo) throws BLException;
-public boolean studentEnrollmentNumberExists(String enrollmentNumber) throws BLException;
-public boolean studentAadharCardNumberExists(String aadharCardNumber) throws BLException;
+public boolean studentRollNoExists(String rollNo);
+public boolean studentEnrollmentNumberExists(String enrollmentNumber);
+public boolean studentAadharCardNumberExists(String aadharCardNumber);
 
-public int getStudentCount() throws BLException;
+public int getStudentCount();
 public int getStudentCountByCourse(int courseCode) throws BLException;
 }

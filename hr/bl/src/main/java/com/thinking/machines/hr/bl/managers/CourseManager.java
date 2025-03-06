@@ -50,6 +50,14 @@ blException.setGenericException(daoException.getMessage());
 throw blException;
 }
 }
+//lect 62
+CourseInterface getDSCourseByCode(int code)
+{
+CourseInterface course;
+course = this.codeWiseCoursesMap.get(code);
+return course;
+}
+
 
 public void addCourse(CourseInterface course) throws BLException
 {
@@ -224,19 +232,19 @@ throw blException;
 }
 return course;
 }
-public int getCourseCount() throws BLException
+public int getCourseCount()
 {
 return this.coursesSet.size();
 }
-public boolean courseCodeExists(int code) throws BLException
+public boolean courseCodeExists(int code)
 {
 return this.codeWiseCoursesMap.containsKey(code);
 }
-public boolean courseTitleExists(String title) throws BLException
+public boolean courseTitleExists(String title)
 {
 return this.titleWiseCoursesMap.containsKey(title.toUpperCase());
 }
-public Set<CourseInterface> getCourses() throws BLException
+public Set<CourseInterface> getCourses()
 {
 //do not return original data structure
 //return clone of our data structure

@@ -11,9 +11,9 @@ public void removeCourse(int code) throws BLException;
 
 public CourseInterface getCourseByCode(int code) throws BLException;
 public CourseInterface getCourseByTitle(String title) throws BLException;
-public int getCourseCount() throws BLException;
+public int getCourseCount();
 
-public boolean courseCodeExists(int code) throws BLException;
-public boolean courseTitleExists(String title) throws BLException;
-public Set<CourseInterface> getCourses() throws BLException;
+public boolean courseCodeExists(int code);
+public boolean courseTitleExists(String title);
+public Set<CourseInterface> getCourses();
 }
