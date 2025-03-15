@@ -18,6 +18,7 @@ private Map<String,StudentInterface> rollNoWiseStudentsMap;
 private Map<String,StudentInterface> enrollmentNumberWiseStudentsMap;
 private Map<String,StudentInterface> aadharCardNumberWiseStudentsMap;
 private Set<StudentInterface> studentsSet;
+private Map<Integer,Set<StudentInterface>> courseCodeWiseStudentsMap; //added towards the end
 private static StudentManager studentManager = null;
 
 private StudentManager() throws BLException
@@ -35,7 +36,7 @@ this.rollNoWiseStudentsMap = new HashMap<>();
 this.enrollmentNumberWiseStudentsMap = new HashMap<>();
 this.aadharCardNumberWiseStudentsMap = new HashMap<>();
 this.studentsSet = new TreeSet<>();
-
+this.courseCodeWiseStudentsMap = new HashMap<>();
 try
 {
 Set<StudentDTOInterface> dlStudents;
@@ -46,6 +47,7 @@ StudentInterface student;
 CourseManagerInterface courseManager;
 courseManager = CourseManager.getCourseManager();
 CourseInterface course;
+Set<StudentInterface> studentTreeSet; //to add into the course-code-tree that this student belongs to
 for(StudentDTOInterface dlStudent:dlStudents)
 {
 student = new Student();
@@ -66,6 +68,17 @@ this.rollNoWiseStudentsMap.put(student.getRollNo().toUpperCase(),student); //no 
 this.enrollmentNumberWiseStudentsMap.put(student.getEnrollmentNumber().toUpperCase(),student);
 this.aadharCardNumberWiseStudentsMap.put(student.getAadharCardNumber().toUpperCase(),student);
 this.studentsSet.add(student);
+studentTreeSet = this.courseCodeWiseStudentsMap.get(course.getCode()); 
+if(studentTreeSet==null)
+{
+studentTreeSet = new TreeSet<>();
+studentTreeSet.add(student);
+this.courseCodeWiseStudentsMap.put(course.getCode(),studentTreeSet);
+}
+else
+{
+studentTreeSet.add(student);
+}
 }
 }catch(DAOException daoException)
 {
@@ -207,15 +220,15 @@ StudentInterface blStudent = new Student();
 blStudent.setRollNo(studentDTO.getRollNo());
 blStudent.setName(name);
 
-//getting original Course object for setting into Student. For that we'll temporarily typecast because the "interface" pointer does not know this method which is only in its implementation
+//getting original Course object for setting into Student. For that we'll temporarily typecast because the "interface" pointer does not know this method which is only in the class which implemented the interface
 CourseInterface originalCourse;
 originalCourse = ((CourseManager)courseManager).getDSCourseByCode(course.getCode());
 blStudent.setCourse(originalCourse);
 
-blStudent.setDateOfBirth(dateOfBirth);
+blStudent.setDateOfBirth((Date)dateOfBirth.clone());
 blStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE); //if condition is true, first value will be assigned, else second value will be assigned 
 blStudent.setIsIndian(isIndian);
-blStudent.setFees(fees); 		//doubt
+blStudent.setFees(fees); 		
 blStudent.setEnrollmentNumber(enrollmentNumber);
 blStudent.setAadharCardNumber(aadharCardNumber);
 //add to DS
@@ -223,6 +236,18 @@ this.rollNoWiseStudentsMap.put(blStudent.getRollNo().toUpperCase(),blStudent);
 this.enrollmentNumberWiseStudentsMap.put(enrollmentNumber.toUpperCase(),blStudent);
 this.aadharCardNumberWiseStudentsMap.put(aadharCardNumber.toUpperCase(),blStudent);
 this.studentsSet.add(blStudent); 
+Set<StudentInterface> studentTreeSet;
+studentTreeSet = this.courseCodeWiseStudentsMap.get(blStudent.getCourse().getCode());
+if(studentTreeSet==null)
+{
+studentTreeSet = new TreeSet<>();
+studentTreeSet.add(blStudent);
+this.courseCodeWiseStudentsMap.put(blStudent.getCourse().getCode(),studentTreeSet);
+}
+else
+{
+studentTreeSet.add(blStudent);
+}
 }catch(DAOException daoException)
 {
 blException.setGenericException(daoException.getMessage());
@@ -358,6 +383,7 @@ StudentInterface dsStudent;
 dsStudent = this.rollNoWiseStudentsMap.get(rollNo.toUpperCase());
 String oldEnrollmentNumber = dsStudent.getEnrollmentNumber();
 String oldAadharCardNumber = dsStudent.getAadharCardNumber();
+CourseInterface oldCourse = dsStudent.getCourse();
 
 StudentDTOInterface studentDTO = new StudentDTO();
 studentDTO.setRollNo(dsStudent.getRollNo()); //doubt: error. we should not set the rollno being passed. we should set the rollno that exists in ds
@@ -366,7 +392,7 @@ studentDTO.setCourseCode(courseCode);
 studentDTO.setDateOfBirth(dateOfBirth);
 studentDTO.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE); 
 studentDTO.setIsIndian(isIndian);
-studentDTO.setFees(fees); 		//doubt
+studentDTO.setFees(fees); 
 studentDTO.setEnrollmentNumber(enrollmentNumber);
 studentDTO.setAadharCardNumber(aadharCardNumber);
 new StudentDAO().update(studentDTO);
@@ -374,8 +400,13 @@ new StudentDAO().update(studentDTO);
 StudentInterface blStudent = new Student();
 blStudent.setRollNo(studentDTO.getRollNo());
 blStudent.setName(name);
-blStudent.setCourse(course);
-blStudent.setDateOfBirth(dateOfBirth);
+
+//adding original because it's going to stay within our internal DS only
+CourseInterface originalCourse;
+originalCourse = ((CourseManager)courseManager).getDSCourseByCode(oldCourse.getCode());
+blStudent.setCourse(originalCourse);
+
+blStudent.setDateOfBirth((Date)dateOfBirth.clone());
 blStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE); //if condition is true, first value will be assigned, else second value will be assigned 
 blStudent.setIsIndian(isIndian);
 blStudent.setFees(fees); 
@@ -386,11 +417,25 @@ rollNoWiseStudentsMap.remove(dsStudent.getRollNo());
 enrollmentNumberWiseStudentsMap.remove(oldEnrollmentNumber);
 aadharCardNumberWiseStudentsMap.remove(oldAadharCardNumber);
 studentsSet.remove(dsStudent); 
+Set<StudentInterface> studentTreeSet;
+studentTreeSet = this.courseCodeWiseStudentsMap.get(oldCourse.getCode());
+studentTreeSet.remove(dsStudent);
 //add to DS
 this.rollNoWiseStudentsMap.put(blStudent.getRollNo().toUpperCase(),blStudent); //uppercasing as a precaution
 this.enrollmentNumberWiseStudentsMap.put(blStudent.getEnrollmentNumber().toUpperCase(),blStudent); //enter into DS according to new enrollment/aadhar field
 this.aadharCardNumberWiseStudentsMap.put(blStudent.getAadharCardNumber().toUpperCase(),blStudent);
 this.studentsSet.add(blStudent);
+studentTreeSet = this.courseCodeWiseStudentsMap.get(blStudent.getCourse().getCode());
+if(studentTreeSet==null)
+{
+studentTreeSet = new TreeSet<>();
+studentTreeSet.add(blStudent);
+this.courseCodeWiseStudentsMap.put(blStudent.getCourse().getCode(),studentTreeSet);
+}
+else
+{
+studentTreeSet.add(blStudent);
+} 
 }catch(DAOException daoException)
 {
 blException.setGenericException(daoException.getMessage());
@@ -435,6 +480,9 @@ rollNoWiseStudentsMap.remove(dsStudent.getRollNo());
 enrollmentNumberWiseStudentsMap.remove(oldEnrollmentNumber);
 aadharCardNumberWiseStudentsMap.remove(oldAadharCardNumber);
 studentsSet.remove(dsStudent); 
+Set<StudentInterface> studentTreeSet;
+studentTreeSet = this.courseCodeWiseStudentsMap.get(dsStudent.getCourse().getCode());
+studentTreeSet.remove(dsStudent);
 }catch(DAOException daoException)
 {
 BLException blException = new BLException();
@@ -445,25 +493,43 @@ throw blException;
 
 public Set<StudentInterface> getStudentsByCourseCode(int courseCode) throws BLException
 {
-Set<StudentInterface> treeSet = new TreeSet<>();
-for(StudentInterface student:this.studentsSet)
+Set<StudentInterface> originalTreeSet; 
+originalTreeSet = this.courseCodeWiseStudentsMap.get(courseCode);
+Set<StudentInterface> duplicateTreeSet;
+duplicateTreeSet = new TreeSet<>(); 
+if(originalTreeSet==null) return duplicateTreeSet; //return empty set in case of invalid courseCode
+for(StudentInterface student:originalTreeSet)
 {
-if(student.getCourse().getCode()==courseCode)
-{
-treeSet.add(student);
+duplicateTreeSet.add(student);
 }
-}
-return treeSet;
+return duplicateTreeSet;
 }
 public Set<StudentInterface> getStudents()
 {
 Set<StudentInterface> treeSet = new TreeSet<>();
-for(StudentInterface student:this.studentsSet)
+StudentInterface duplicateStudent;
+CourseInterface course;
+CourseInterface duplicateCourse;
+for(StudentInterface dsStudent:this.studentsSet)
 {
-treeSet.add(student);
+duplicateStudent = new Student();
+duplicateCourse = new Course();
+duplicateStudent.setRollNo(dsStudent.getRollNo());
+duplicateStudent.setName(dsStudent.getName());
+course=dsStudent.getCourse();	//important
+duplicateCourse.setCode(course.getCode());
+duplicateCourse.setTitle(course.getTitle());
+duplicateStudent.setCourse(duplicateCourse);
+duplicateStudent.setDateOfBirth((Date)dsStudent.getDateOfBirth().clone());
+char gender = dsStudent.getGender();
+duplicateStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE);
+duplicateStudent.setIsIndian(dsStudent.getIsIndian());
+duplicateStudent.setFees(dsStudent.getFees());
+duplicateStudent.setEnrollmentNumber(dsStudent.getEnrollmentNumber());
+duplicateStudent.setAadharCardNumber(dsStudent.getAadharCardNumber());
+treeSet.add(duplicateStudent);
 }
 return treeSet;
-//doubt: this much precaution necessary? is IOException the correct one to catch?
 }
 
 public StudentInterface getStudentByRollNo(String rollNo) throws BLException
@@ -482,7 +548,7 @@ StudentInterface tmpStudent = new Student();
 tmpStudent.setRollNo(student.getRollNo());
 tmpStudent.setName(student.getName());
 tmpStudent.setCourse(student.getCourse()); //error: set duplicate of Course
-tmpStudent.setDateOfBirth(student.getDateOfBirth());
+tmpStudent.setDateOfBirth((Date)student.getDateOfBirth().clone());
 char gender = student.getGender();
 tmpStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE);
 tmpStudent.setIsIndian(student.getIsIndian());
@@ -508,7 +574,7 @@ StudentInterface tmpStudent = new Student();
 tmpStudent.setRollNo(student.getRollNo());
 tmpStudent.setName(student.getName());
 tmpStudent.setCourse(student.getCourse());
-tmpStudent.setDateOfBirth(student.getDateOfBirth());
+tmpStudent.setDateOfBirth((Date)student.getDateOfBirth().clone());
 char gender = student.getGender();
 tmpStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE);
 tmpStudent.setIsIndian(student.getIsIndian());
@@ -534,7 +600,7 @@ StudentInterface tmpStudent = new Student();
 tmpStudent.setRollNo(student.getRollNo());
 tmpStudent.setName(student.getName());
 tmpStudent.setCourse(student.getCourse());
-tmpStudent.setDateOfBirth(student.getDateOfBirth());
+tmpStudent.setDateOfBirth((Date)student.getDateOfBirth().clone());
 char gender = student.getGender();
 tmpStudent.setGender((gender=='M')?GENDER.MALE:GENDER.FEMALE);
 tmpStudent.setIsIndian(student.getIsIndian());
@@ -547,13 +613,12 @@ return tmpStudent;
 
 public boolean isCourseAllotted(int courseCode) throws BLException
 {
-BLException blException = new BLException();
-boolean isCourseAllotted;
-CourseManagerInterface courseManager = CourseManager.getCourseManager();
-isCourseAllotted = courseManager.courseCodeExists(courseCode);
+boolean isCourseAllotted = false;
+if(this.courseCodeWiseStudentsMap.containsKey(courseCode) && this.courseCodeWiseStudentsMap.get(courseCode).size()!=0) //2nd condition for corner case - all entries from a particular courseCodeWiseStudentsMap's set were removed, but the empty set still exists which will return true for first condition
+{
+isCourseAllotted = true;
+}
 return isCourseAllotted;
-
-//doubt: no catch DAOException?
 }
 public boolean studentRollNoExists(String rollNo)
 {
@@ -572,17 +637,12 @@ public int getStudentCount()
 {
 return this.studentsSet.size();
 }
-public int getStudentCountByCourse(int courseCode) throws BLException
+public int getStudentCountByCourseCode(int courseCode) throws BLException
 {
-int count = 0;
-for(StudentInterface student:this.studentsSet)
-{
-if(student.getCourse().getCode()==courseCode)
-{
-count++;
-}
-}
-return count;
+Set<StudentInterface> studentTreeSet;
+studentTreeSet = this.courseCodeWiseStudentsMap.get(courseCode);
+if(studentTreeSet==null) return 0;
+return studentTreeSet.size();
 }
 
 }//end of StudentManager.java class

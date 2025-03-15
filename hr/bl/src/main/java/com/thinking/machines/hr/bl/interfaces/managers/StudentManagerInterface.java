@@ -21,5 +21,5 @@ public boolean studentEnrollmentNumberExists(String enrollmentNumber);
 public boolean studentAadharCardNumberExists(String aadharCardNumber);
 
 public int getStudentCount();
-public int getStudentCountByCourse(int courseCode) throws BLException;
+public int getStudentCountByCourseCode(int courseCode) throws BLException;
 }

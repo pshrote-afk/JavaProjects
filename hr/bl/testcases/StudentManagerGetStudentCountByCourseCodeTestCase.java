@@ -4,7 +4,7 @@ import com.thinking.machines.hr.bl.managers.*;
 import com.thinking.machines.hr.bl.pojo.*;
 import com.thinking.machines.hr.bl.exceptions.*;
 import java.util.*;
-public class StudentManagerGetStudentCountByCourseTestCase
+public class StudentManagerGetStudentCountByCourseCodeTestCase
 {
 public static void main(String gg[])
 {
@@ -12,7 +12,7 @@ int courseCode = Integer.parseInt(gg[0]);
 try
 {
 StudentManagerInterface studentManager = StudentManager.getStudentManager();
-int count = studentManager.getStudentCountByCourse(courseCode);
+int count = studentManager.getStudentCountByCourseCode(courseCode);
 
 CourseManagerInterface courseManager = CourseManager.getCourseManager();
 String courseTitle = courseManager.getCourseByCode(courseCode).getTitle();
