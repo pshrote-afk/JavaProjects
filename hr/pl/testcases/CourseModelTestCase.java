@@ -1,31 +1,26 @@
-import com.thinking.machines.hr.pl.model.*;
-
-import javax.swing.*;
-import java.awt.*;
-
-class CourseTable extends JFrame
+import com.thinking.machines.hr.pl.model.*; //for CourseModel which extends AbstractTableModel
+import java.awt.*; //for Container
+import javax.swing.*; //for JFrame
+class CourseModelTestCase extends JFrame
 {
-private JTable table;
 private Container container;
+private JTable table;
 private JScrollPane jsp;
-public CourseTable()
+private CourseModel courseModel;
+CourseModelTestCase()
 {
-CourseModel courseModel = new CourseModel();
-table = new JTable(courseModel);
-jsp = new JScrollPane(table,ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 container = getContentPane();
-//container.add(table); //directly add scroll pane
+courseModel = new CourseModel();
+table = new JTable(courseModel);
+jsp = new JScrollPane(this.table,ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 container.add(jsp);
-
-setSize(500,600);
+this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+setSize(400,600);
 setLocation(960,540);
 setVisible(true);
 }
-}
-class CourseModelTestCase
-{
 public static void main(String gg[])
 {
-CourseTable courseTable = new CourseTable();
+CourseModelTestCase obj1 = new CourseModelTestCase();
 }
 }

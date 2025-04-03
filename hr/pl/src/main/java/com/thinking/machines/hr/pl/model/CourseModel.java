@@ -1,54 +1,52 @@
 package com.thinking.machines.hr.pl.model;
+import javax.swing.table.*; //for AbstractTableModel
+import java.util.*; //for List
+//BL
 import com.thinking.machines.hr.bl.interfaces.managers.*;
 import com.thinking.machines.hr.bl.interfaces.pojo.*;
 import com.thinking.machines.hr.bl.managers.*;
 import com.thinking.machines.hr.bl.pojo.*;
 import com.thinking.machines.hr.bl.exceptions.*;
-//swing
-import javax.swing.*;
-import java.awt.*;
-import javax.swing.table.*;
-import java.util.*; //for Set and List
+
 public class CourseModel extends AbstractTableModel
 {
-private String columnTitle[];
-private CourseManagerInterface courseManager;
-private java.util.List<CourseInterface> plCoursesList;
-public CourseModel()
-{
-this.populateDataStructure();
-}
-
-private void populateDataStructure()
-{
-columnTitle = new String[2];
-columnTitle[0] = "Sr. No.";
-columnTitle[1] = "Course";
-Set<CourseInterface> blCourses;
-try
-{
-courseManager = CourseManager.getCourseManager();
-}catch(BLException blException)
-{
-//????? what to do 
-}
-blCourses = courseManager.getCourses(); //these are already duplicated and returned. No need to duplicate them again to add in PL-level data structure
-plCoursesList = new LinkedList<>();
-for(CourseInterface tmpCourse:blCourses)
-{
-plCoursesList.add(tmpCourse);
-}
-//calling a function to sort after entire DS has been loaded
-Collections.sort(this.plCoursesList,new Comparator<CourseInterface>(){
-public int compare(CourseInterface left,CourseInterface right)
-{
-return left.getTitle().toUpperCase().compareTo(right.getTitle().toUpperCase());
-}
-}); 
-}
+    private String columnTitle[];
+    private List<CourseInterface> plCoursesList;
+    private CourseManagerInterface courseManager;
+    public CourseModel()
+    {
+        populateDataStructure();
+    }
+    private void populateDataStructure()
+    {
+        columnTitle = new String[2];
+        columnTitle[0] = "Sr. No.";
+        columnTitle[1] = "Course";
+        try 
+        {
+         courseManager = CourseManager.getCourseManager();
+        }catch(BLException blException) 
+        {
+            // ????? do what
+        }
+        Set<CourseInterface> blCourses = courseManager.getCourses();   
+	plCoursesList = new LinkedList<>();        
+	for(CourseInterface course:blCourses) 
+        {
+            plCoursesList.add(course); //getCourses() already returns duplicates. No need to duplicate and add in PL-level DS therefore
+        }
+	//now that PL-level DS is populated, let us sort it. //Doubt: how will it be sorted when we add a new entry?
+	
+	Collections.sort(this.plCoursesList,new Comparator<CourseInterface>(){
+	public int compare(CourseInterface left,CourseInterface right)
+	{
+		return left.getTitle().toUpperCase().compareTo(right.getTitle().toUpperCase());
+	}
+	});
+    }
 public int getRowCount()
 {
-return plCoursesList.size();
+return plCoursesList.size();        
 }
 public int getColumnCount()
 {
@@ -60,7 +58,7 @@ return columnTitle[columnIndex];
 }
 public Class getColumnClass(int columnIndex)
 {
-if(columnIndex==0) return Integer.class; //special treatment. As good as writing: Class.forName("java.lang.Integer");
+if(columnIndex==0) return Integer.class;
 if(columnIndex==1) return String.class;
 return null;
 }
@@ -68,14 +66,102 @@ public boolean isCellEditable(int rowIndex,int columnIndex)
 {
 return false;
 }
-public Object getValueAt(int rowIndex,int columnIndex) //imp
+public Object getValueAt(int rowIndex,int columnIndex)
 {
 if(columnIndex==0) return rowIndex+1;
-else return plCoursesList.get(rowIndex).getTitle(); //LinkedList can be given index. (which will be considered index of node). .getTitle() very important
+else return plCoursesList.get(rowIndex).getTitle();
+}
+// Application Specific Methods
+public void add(CourseInterface course) throws BLException
+{
+courseManager.addCourse(course);
+this.plCoursesList.add(course);
+Collections.sort(this.plCoursesList,new Comparator<CourseInterface>(){
+public int compare(CourseInterface left,CourseInterface right)
+{
+return left.getTitle().toUpperCase().compareTo(right.getTitle().toUpperCase()); //compareTo() method of String
+}
+});
+fireTableDataChanged();
+}
+public void update(CourseInterface course) throws BLException
+{
+courseManager.updateCourse(course);
+this.plCoursesList.remove(indexOfCourse(course)); //removing on the basis of course.getCode(). hence, yes, we can use the new updated object to help remove. Cause w/ current BL,DL functionalities we cannot change course code. We can only update title
+this.plCoursesList.add(course); 
+Collections.sort(this.plCoursesList,new Comparator<CourseInterface>(){
+public int compare(CourseInterface left,CourseInterface right)
+{
+return left.getTitle().toUpperCase().compareTo(right.getTitle().toUpperCase());
+}
+});
+fireTableDataChanged();
+}
+public void remove(int code) throws BLException
+{
+courseManager.removeCourse(code);
+Iterator<CourseInterface> iterator = this.plCoursesList.iterator();
+int index = 0;
+while(iterator.hasNext())
+{
+if(iterator.next().getCode()==code) break;
+index++;
+}
+if(index==this.plCoursesList.size())
+{
+BLException blException = new BLException();
+blException.setGenericException("Invalid course code: "+code);
+throw blException;
+}
+this.plCoursesList.remove(index); //removing on the basis of course.getCode(). hence, yes, we can use the new updated object to help remove. Cause w/ current BL,DL functionalities we cannot change course code. We can only update title
+fireTableDataChanged();
+}
+public int indexOfCourse(CourseInterface course) throws BLException
+{
+Iterator<CourseInterface> iterator = this.plCoursesList.iterator();
+int index = 0;
+CourseInterface tmpCourse;
+while(iterator.hasNext())
+{
+tmpCourse = iterator.next();
+if(course.equals(tmpCourse))
+{
+return index;
+}
+index++;
+}
+BLException blException = new BLException();
+blException.setGenericException("Invalid course: "+course.getTitle());
+throw blException;
+}
+public int indexOfTitle(String title,boolean partialLeftSearch) throws BLException
+{
+Iterator<CourseInterface> iterator = this.plCoursesList.iterator();
+int index = 0;
+CourseInterface tmpCourse;
+while(iterator.hasNext())
+{
+tmpCourse = iterator.next();
+if(partialLeftSearch)
+{
+if(tmpCourse.getTitle().toUpperCase().startsWith(title.toUpperCase()))
+{
+return index;
+}
+}
+else
+{
+if(tmpCourse.getTitle().equalsIgnoreCase(title)) 
+{
+return index;
+}
+}
+index++;
+}
+BLException blException = new BLException();
+blException.setGenericException("Invalid title: "+title);
+throw blException;
 }
 
-
-}
-
-
+} //end of class
 
