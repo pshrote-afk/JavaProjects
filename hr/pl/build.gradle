@@ -1,6 +1,6 @@
 apply plugin: 'java'
 dependencies {
 implementation files('../dl/dist/hr-dl-1.0.jar')
-implementation files('../common/dist/hr-common.jar') //data about enums
-implementation files('../bl/build/libs/bl.jar') //BL packages in a .jar
+implementation files('../bl/build/libs/bl.jar')
+implementation files('../common/dist/hr-common.jar')
 }

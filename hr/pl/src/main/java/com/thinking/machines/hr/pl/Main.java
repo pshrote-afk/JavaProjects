@@ -1,6 +1,7 @@
 package com.thinking.machines.hr.pl;
 import com.thinking.machines.hr.pl.ui.*;
-class Main
+import com.thinking.machines.hr.pl.model.*;
+public class Main
 {
 public static void main(String args[])
 {
