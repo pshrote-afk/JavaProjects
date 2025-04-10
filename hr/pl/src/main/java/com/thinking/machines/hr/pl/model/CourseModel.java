@@ -38,6 +38,12 @@ while(iterator.hasNext())
 tmpCourse = iterator.next();
 plCoursesList.add(tmpCourse);
 }
+Collections.sort(this.plCoursesList,new Comparator<CourseInterface>(){
+public int compare(CourseInterface left,CourseInterface right)
+{
+return left.getTitle().toUpperCase().compareTo(right.getTitle().toUpperCase());
+}
+});
 }
 public int getRowCount()
 {
@@ -71,7 +77,7 @@ return false;
 //application specific methods
 public void add(CourseInterface course) throws BLException
 {
-courseManager.addCourse(course);
+courseManager.addCourse(course); //not in a try-catch cause method does not handle error, it throws it
 this.plCoursesList.add(course);
 Collections.sort(this.plCoursesList,new Comparator<CourseInterface>(){
 public int compare(CourseInterface left,CourseInterface right)
@@ -161,6 +167,20 @@ blException.setGenericException("Invalid title: "+title);
 throw blException;
 }
 return index;
+}
+public CourseInterface getCourseAt(int rowIndex) throws BLException
+{
+CourseInterface tmpCourse;
+try
+{
+tmpCourse = this.plCoursesList.get(rowIndex);
+}catch(IndexOutOfBoundsException indexOutOfBoundsException)
+{
+BLException blException = new BLException();
+blException.setGenericException(indexOutOfBoundsException.getMessage());
+throw blException;
+}
+return tmpCourse;
 }
 
 } //end of class

@@ -5,8 +5,10 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 //BL
+import com.thinking.machines.hr.bl.interfaces.pojo.*;
+import com.thinking.machines.hr.bl.pojo.*;
 import com.thinking.machines.hr.bl.exceptions.*;
-public class CourseUI extends JFrame implements DocumentListener
+public class CourseUI extends JFrame implements DocumentListener,ListSelectionListener
 {
 private Container container;
 private JTable courseTable;
@@ -15,7 +17,7 @@ private JScrollPane scrollPane;
 private JLabel titleLabel;
 private JLabel searchLabel;
 private JLabel searchErrorLabel;
-private JButton searchCancelButton;
+private JButton searchTextFieldCancelButton;
 private JTextField searchTextField;
 private CoursePanel coursePanel;
 public CourseUI()
@@ -36,7 +38,7 @@ scrollPane = new JScrollPane(this.courseTable,ScrollPaneConstants.VERTICAL_SCROL
 titleLabel = new JLabel("Courses");
 searchLabel = new JLabel("Search");
 searchErrorLabel = new JLabel();
-searchCancelButton = new JButton("X");
+searchTextFieldCancelButton = new JButton("X");
 searchTextField = new JTextField(); //don't set width now, cause we're going to set it using setBounds();
 coursePanel = new CoursePanel();
 }
@@ -75,7 +77,7 @@ courseTable.setFont(dataFont);
 titleLabel.setBounds(lm+10,tm+10,200,40);
 searchLabel.setBounds(lm+10,tm+10+40+10,75,30);
 searchTextField.setBounds(lm+10+75,tm+10+40+10,300,30);
-searchCancelButton.setBounds(lm+10+75+300+5,tm+10+40+10,30,30);
+searchTextFieldCancelButton.setBounds(lm+10+75+300+5,tm+10+40+10,30,30);
 searchErrorLabel.setBounds(lm+10+75+300+5-65,tm+10+40+10-25,75,30);
 scrollPane.setBounds(lm+10,tm+10+40+10+30+10,450,300);
 coursePanel.setBounds(lm+10,tm+10+40+10+30+10+300+10,450,140);
@@ -84,7 +86,7 @@ container.setLayout(null);
 container.add(titleLabel);
 container.add(searchLabel);
 container.add(searchTextField);
-container.add(searchCancelButton);
+container.add(searchTextFieldCancelButton);
 container.add(searchErrorLabel);
 container.add(scrollPane);
 container.add(coursePanel);
@@ -92,13 +94,14 @@ container.add(coursePanel);
 private void addListeners()
 {
 searchTextField.getDocument().addDocumentListener(this);
-searchCancelButton.addActionListener(new ActionListener(){
+searchTextFieldCancelButton.addActionListener(new ActionListener(){
 public void actionPerformed(ActionEvent ev)
 {
 searchTextField.setText("");
 searchTextField.requestFocus();
 }
 });
+courseTable.getSelectionModel().addListSelectionListener(this);
 }
 private void searchCourse()
 {
@@ -130,6 +133,20 @@ public void insertUpdate(DocumentEvent ev)
 {
 searchCourse();
 }
+public void valueChanged(ListSelectionEvent ev)
+{
+int rowIndex = courseTable.getSelectedRow();
+try
+{
+CourseInterface tmpCourse = courseModel.getCourseAt(rowIndex);
+coursePanel.setCourse(tmpCourse);
+}catch(BLException blException)
+{
+coursePanel.clearCourse();
+}
+
+}
+
 
 //inner class
 class CoursePanel extends JPanel
@@ -145,6 +162,7 @@ private JButton deleteButton;
 private JButton cancelButton;
 private JButton exportToPDFButton;
 private JPanel buttonsPanel;
+private CourseInterface course;
 CoursePanel()
 {
 this.setBorder(BorderFactory.createLineBorder(new Color(175,175,175)));
@@ -157,9 +175,9 @@ public void initComponents()
 titleCaptionLabel = new JLabel("Course");
 titleLabel = new JLabel("temporary text");
 titleTextField = new JTextField();
-clearTitleTextFieldButton = new JButton();
+clearTitleTextFieldButton = new JButton("x");
 addButton = new JButton("A");
-saveButton = new JButton("Save");
+saveButton = new JButton(new ImageIcon("../icons/saveButton.png"));
 editButton = new JButton("B");
 deleteButton = new JButton("C");
 cancelButton = new JButton("D");
@@ -187,31 +205,139 @@ buttonsPanel.setBorder(BorderFactory.createLineBorder(new Color(175,175,175)));
 //setting up buttonsPanel
 int lm1 = 0;
 int tm1 = 0;
-addButton.setBounds(lm1+20+75,tm1+20,30,30);
-saveButton.setBounds(lm1+20+75,tm1+20,30,30);
-editButton.setBounds(lm1+20+30+20+75,tm1+20,30,30);
-deleteButton.setBounds(lm1+20+30+20+30+20+75,tm1+20,30,30);
-cancelButton.setBounds(lm1+20+30+20+30+20+30+20+75,tm1+20,30,30);
-exportToPDFButton.setBounds(lm1+20+30+20+30+20+30+20+30+20+75,tm1+20,30,30);
+addButton.setBounds(lm1+20+75,tm1+20,40,40);
+saveButton.setBounds(lm1+20+75,tm1+20,40,40);
+editButton.setBounds(lm1+20+30+20+75,tm1+20,40,40);
+deleteButton.setBounds(lm1+20+30+20+30+20+75,tm1+20,40,40);
+cancelButton.setBounds(lm1+20+30+20+30+20+30+20+75,tm1+20,40,40);
+exportToPDFButton.setBounds(lm1+20+30+20+30+20+30+20+30+20+75,tm1+20,40,40);
 
 //adding buttons to buttonsPanel
 buttonsPanel.setLayout(null);
 buttonsPanel.add(addButton);
 buttonsPanel.add(saveButton);
+saveButton.setVisible(false);  
 buttonsPanel.add(editButton);
 buttonsPanel.add(deleteButton);
 buttonsPanel.add(cancelButton);
+cancelButton.setEnabled(false);
 buttonsPanel.add(exportToPDFButton);
 
 //adding components
 this.add(titleCaptionLabel);
-//this.add(titleTextField);
+titleTextField.setVisible(false);
+this.add(titleTextField);
 this.add(titleLabel);
 this.add(clearTitleTextFieldButton);
 this.add(buttonsPanel);
 }
 public void addListeners()
 {
+clearTitleTextFieldButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+titleTextField.setText("");
+titleTextField.requestFocus();
 }
+});
+addButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+//enable/disable buttons
+CourseUI.this.searchTextFieldCancelButton.setEnabled(false);
+addButton.setVisible(false); //using setVisible instead of setEnabled cause buttons are overlapping, merely enabling/disabling is giving issues like: saveButton not responding after enabling
+saveButton.setVisible(true);
+editButton.setEnabled(false);
+deleteButton.setEnabled(false);
+cancelButton.setEnabled(true);
+exportToPDFButton.setEnabled(false);
+
+//other component visibility
+CourseUI.this.searchTextField.setText("");	//cleared main search
+CourseUI.this.searchTextField.setVisible(false);
+titleLabel.setVisible(false);
+titleTextField.setVisible(true);
+
+//table related
+courseTable.setRowSelectionAllowed(false);
+
 }
+});
+cancelButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+//enable/disable buttons
+CourseUI.this.searchTextFieldCancelButton.setEnabled(true);
+addButton.setVisible(true);
+saveButton.setVisible(false);
+editButton.setEnabled(true);
+deleteButton.setEnabled(true);
+cancelButton.setEnabled(false);
+exportToPDFButton.setEnabled(true);
+
+//other component visibility
+CourseUI.this.searchTextField.setVisible(true);
+titleLabel.setVisible(true);
+titleTextField.setText("");
+titleTextField.setVisible(false);
+
+//table related
+courseTable.setRowSelectionAllowed(true);
+
+}
+});
+saveButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+String title = titleTextField.getText().trim();
+if(title.length() == 0)
+{
+JOptionPane.showMessageDialog(CourseUI.this,"Title required","Error",JOptionPane.ERROR_MESSAGE);
+return; //don't go back to "regular view" by enabling/disabling components, stay in this "addButton" view
+}
+try
+{
+//Doubt: PL should not have to make a course and pass. We should only pass the String to model. Model should make an object and pass it further to BL
+CourseInterface course = new Course();
+course.setTitle(title);
+courseModel.add(course);
+JOptionPane.showMessageDialog(CourseUI.this,"Course added successfully!","Success",JOptionPane.INFORMATION_MESSAGE);
+}catch(BLException blException)
+{
+JOptionPane.showMessageDialog(CourseUI.this,blException.getException("title"),"Error",JOptionPane.ERROR_MESSAGE); //here the "title" in blException.getException(title); is name of property against which there is an exception
+return;
+}
+//enable/disable buttons
+CourseUI.this.searchTextFieldCancelButton.setEnabled(true);
+addButton.setVisible(true);
+saveButton.setVisible(false);
+editButton.setEnabled(true);
+deleteButton.setEnabled(true);
+cancelButton.setEnabled(false);
+exportToPDFButton.setEnabled(true);
+
+//other component visibility
+CourseUI.this.searchTextField.setVisible(true);
+titleLabel.setVisible(true);
+titleTextField.setText("");
+titleTextField.setVisible(false);
+
+//table related
+courseTable.setRowSelectionAllowed(true);
+}
+
+});
+}
+public void setCourse(CourseInterface course)
+{
+titleLabel.setText(course.getTitle());
+titleTextField.setVisible(false); 
+}
+public void clearCourse()
+{
+titleLabel.setText("");
+titleTextField.setVisible(true);
+}
+
+}//inner class end
 }//end of class

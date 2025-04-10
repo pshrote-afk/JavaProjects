@@ -80,7 +80,7 @@ if(title.length()>0)
 {
 if(titleWiseCoursesMap.containsKey(title.toUpperCase()))
 {
-blException.addException("title","Designation: " + title + " already exists");
+blException.addException("title","Course: " + title + " already exists");
 }
 }
 if(blException.hasExceptions())
@@ -147,7 +147,7 @@ CourseInterface tmpCourse;
 tmpCourse = titleWiseCoursesMap.get(title.toUpperCase());
 if(tmpCourse!=null && tmpCourse.getCode()!=code)
 {
-blException.addException("title","Designation: "+title+" already exists");
+blException.addException("title","Course: "+title+" already exists");
 }
 }
 if(blException.hasExceptions())
