@@ -331,12 +331,11 @@ courseTable.setRowSelectionAllowed(true);
 public void setCourse(CourseInterface course)
 {
 titleLabel.setText(course.getTitle());
-titleTextField.setVisible(false); 
 }
 public void clearCourse()
 {
 titleLabel.setText("");
-titleTextField.setVisible(true);
+
 }
 
 }//inner class end
