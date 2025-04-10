@@ -6,6 +6,8 @@ import javax.swing.*;
 import javax.swing.event.*;
 //BL
 import com.thinking.machines.hr.bl.exceptions.*;
+import com.thinking.machines.hr.bl.interfaces.pojo.*;
+import com.thinking.machines.hr.bl.pojo.*;
 public class CourseUI extends JFrame implements DocumentListener
 {
 private Container container;
@@ -18,11 +20,15 @@ private JLabel searchErrorLabel;
 private JButton searchCancelButton;
 private JTextField searchTextField;
 private CoursePanel coursePanel;
+private enum MODE{VIEW,ADD,EDIT,DELETE,EXPORT_TO_PDF};
+private MODE mode;
 public CourseUI()
 {
 initComponents();
 setAppearance();
 addListeners();
+setViewMode();
+coursePanel.setViewMode();
 }
 private void initComponents()
 {
@@ -130,7 +136,52 @@ public void insertUpdate(DocumentEvent ev)
 {
 searchCourse();
 }
-
+private void setViewMode()
+{
+//important
+this.mode = MODE.VIEW;
+if(courseModel.getRowCount() == 0) //if no records, why should these three be enabled?
+{
+//note: we request courseModel, and not courseTable, for count
+searchTextField.setEnabled(false);
+searchCancelButton.setEnabled(false);
+courseTable.setEnabled(false);
+}
+else
+{
+searchTextField.setEnabled(true);
+searchCancelButton.setEnabled(true);
+courseTable.setEnabled(true);
+}
+}
+private void setAddMode() //same story for all other modes. But still we make new functions in case tomorrow something changes.
+{
+this.mode = MODE.ADD;
+searchTextField.setEnabled(false);
+searchCancelButton.setEnabled(false);
+courseTable.setEnabled(false);
+}
+private void setEditMode()
+{
+this.mode = MODE.EDIT;
+searchTextField.setEnabled(false);
+searchCancelButton.setEnabled(false);
+courseTable.setEnabled(false);
+}
+private void setDeleteMode()
+{
+this.mode = MODE.DELETE;	
+searchTextField.setEnabled(false);
+searchCancelButton.setEnabled(false);
+courseTable.setEnabled(false);
+}
+private void setExportToPDFMode()
+{ 
+this.mode = MODE.EXPORT_TO_PDF;
+searchTextField.setEnabled(false);
+searchCancelButton.setEnabled(false);
+courseTable.setEnabled(false);
+}
 //inner class
 class CoursePanel extends JPanel
 {
@@ -144,7 +195,7 @@ private JButton editButton;
 private JButton deleteButton;
 private JButton cancelButton;
 private JButton exportToPDFButton;
-private JPanel buttonsPanel;
+private JPanel buttonsPanel;	
 CoursePanel()
 {
 this.setBorder(BorderFactory.createLineBorder(new Color(175,175,175)));
@@ -152,7 +203,7 @@ initComponents();
 setAppearances();
 addListeners();
 }
-public void initComponents()
+private void initComponents()
 {
 titleCaptionLabel = new JLabel("Course");
 titleLabel = new JLabel("temporary text");
@@ -166,7 +217,7 @@ cancelButton = new JButton("D");
 exportToPDFButton = new JButton("E");
 buttonsPanel = new JPanel();
 }
-public void setAppearances()
+private void setAppearances()
 {
 this.setLayout(null);
 int lm = 0; //left margin for CoursePanel
@@ -201,17 +252,174 @@ buttonsPanel.add(saveButton);
 buttonsPanel.add(editButton);
 buttonsPanel.add(deleteButton);
 buttonsPanel.add(cancelButton);
-buttonsPanel.add(exportToPDFButton);
+buttonsPanel.add(exportToPDFButton); 
 
 //adding components
 this.add(titleCaptionLabel);
-//this.add(titleTextField);
+this.add(titleTextField);
 this.add(titleLabel);
 this.add(clearTitleTextFieldButton);
 this.add(buttonsPanel);
 }
-public void addListeners()
+private void addCourse()
 {
+String title = titleTextField.getText().trim();
+if(title.length()==0)
+{
+//if we simply return, control will go back to where it was called from and enter setViewMode()
+// ??? assignment
+}
+CourseInterface tmpCourse = new Course();
+tmpCourse.setTitle(title);
+try
+{
+courseModel.add(tmpCourse);
+int rowIndex = 0;
+try
+{
+rowIndex = courseModel.indexOfCourse(tmpCourse);
+}catch(BLException blException)
+{
+// do nothing
+}
+courseTable.setRowSelectionInterval(rowIndex,rowIndex);
+Rectangle rectangle = courseTable.getCellRect(rowIndex,0,true);
+courseTable.scrollRectToVisible(rectangle);
+}catch(BLException blException)
+{
+// ??? 
 }
 }
+private void updateCourse()
+{
+
+
+}
+private void addListeners()
+{
+this.addButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+//first figure which mode, then make changes accordingly
+if(mode == MODE.VIEW)
+{
+setAddMode();
+}
+else
+{
+//logic to save and get back to view mode
+addCourse();
+setViewMode();
+}
+}
+});
+this.editButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+if(mode == MODE.VIEW)
+{
+setEditMode();
+}
+else
+{
+//logic to save and get back to view mode
+updateCourse();
+setViewMode();
+}
+}
+});
+this.cancelButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+setViewMode();
+}
+});
+}
+void setViewMode()
+{//addButton always visible
+CourseUI.this.setViewMode();
+this.addButton.setText("A");
+this.editButton.setText("E");
+this.titleTextField.setVisible(false);
+this.clearTitleTextFieldButton.setVisible(false);
+this.titleLabel.setVisible(true);
+this.addButton.setEnabled(true);
+this.cancelButton.setEnabled(false);
+if(courseModel.getRowCount()>0)
+{
+this.editButton.setEnabled(true);
+this.deleteButton.setEnabled(true);
+this.exportToPDFButton.setEnabled(true);
+}
+else
+{
+this.editButton.setEnabled(false);
+this.deleteButton.setEnabled(false);
+this.exportToPDFButton.setEnabled(false);
+}
+}
+void setAddMode()
+{
+CourseUI.this.setAddMode();
+//above function disables all Components from outer class first
+this.titleTextField.setText("");
+this.titleLabel.setVisible(false);
+this.clearTitleTextFieldButton.setVisible(true);
+this.titleTextField.setVisible(true);
+addButton.setText("S");
+editButton.setEnabled(false);
+cancelButton.setEnabled(true);
+deleteButton.setEnabled(false);
+exportToPDFButton.setEnabled(false);
+}
+void setEditMode()
+{
+//nothing is selected
+if(courseTable.getSelectedRow() < 0 || courseTable.getSelectedRow()>=courseModel.getRowCount())
+{
+JOptionPane.showMessageDialog(this,"Select course to edit");
+return; //won't go in edit mode, will stay in view mode
+}
+CourseUI.this.setEditMode();
+//
+this.titleTextField.setText(course.getTitle());
+this.titleLabel.setVisible(false);
+this.titleTextField.setVisible(true);
+this.clearTitleTextFieldButton.setVisible(true);
+addButton.setEnabled(false);
+cancelButton.setEnabled(true);
+deleteButton.setEnabled(false);
+exportToPDFButton.setEnabled(false);
+editButton.setText("U");
+}
+void setDeleteMode()
+{
+if(courseTable.getSelectedRow() < 0 || courseTable.getSelectedRow()>=courseModel.getRowCount())
+{
+JOptionPane.showMessageDialog(this,"Select course to delete");
+return; 
+}
+CourseUI.this.setDeleteMode();
+//
+addButton.setEnabled(false);
+editButton.setEnabled(false);
+cancelButton.setEnabled(true);
+deleteButton.setEnabled(false); //delete will also stay disabled. two clicks not allowed.
+exportToPDFButton.setEnabled(false);
+
+}
+
+void setExportToPDFMode()
+{
+CourseUI.this.setExportToPDFMode();
+//
+addButton.setEnabled(false);
+editButton.setEnabled(false);
+cancelButton.setEnabled(true);
+deleteButton.setEnabled(false); 
+exportToPDFButton.setEnabled(false);
+
+}
+
+}//end of inner class
 }//end of class
