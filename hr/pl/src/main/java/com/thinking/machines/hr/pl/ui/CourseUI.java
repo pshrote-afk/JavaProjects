@@ -144,10 +144,7 @@ coursePanel.setCourse(tmpCourse);
 {
 coursePanel.clearCourse();
 }
-
 }
-
-
 //inner class
 class CoursePanel extends JPanel
 {
@@ -156,7 +153,6 @@ private JLabel titleLabel;
 private JTextField titleTextField;
 private JButton clearTitleTextFieldButton;
 private JButton addButton;
-private JButton saveButton;
 private JButton editButton;
 private JButton deleteButton;
 private JButton cancelButton;
@@ -177,7 +173,6 @@ titleLabel = new JLabel("temporary text");
 titleTextField = new JTextField();
 clearTitleTextFieldButton = new JButton("x");
 addButton = new JButton("A");
-saveButton = new JButton(new ImageIcon("../icons/saveButton.png"));
 editButton = new JButton("B");
 deleteButton = new JButton("C");
 cancelButton = new JButton("D");
@@ -206,7 +201,6 @@ buttonsPanel.setBorder(BorderFactory.createLineBorder(new Color(175,175,175)));
 int lm1 = 0;
 int tm1 = 0;
 addButton.setBounds(lm1+20+75,tm1+20,40,40);
-saveButton.setBounds(lm1+20+75,tm1+20,40,40);
 editButton.setBounds(lm1+20+30+20+75,tm1+20,40,40);
 deleteButton.setBounds(lm1+20+30+20+30+20+75,tm1+20,40,40);
 cancelButton.setBounds(lm1+20+30+20+30+20+30+20+75,tm1+20,40,40);
@@ -215,8 +209,6 @@ exportToPDFButton.setBounds(lm1+20+30+20+30+20+30+20+30+20+75,tm1+20,40,40);
 //adding buttons to buttonsPanel
 buttonsPanel.setLayout(null);
 buttonsPanel.add(addButton);
-buttonsPanel.add(saveButton);
-saveButton.setVisible(false);  
 buttonsPanel.add(editButton);
 buttonsPanel.add(deleteButton);
 buttonsPanel.add(cancelButton);
@@ -240,93 +232,8 @@ titleTextField.setText("");
 titleTextField.requestFocus();
 }
 });
-addButton.addActionListener(new ActionListener(){
-public void actionPerformed(ActionEvent ev)
-{
-//enable/disable buttons
-CourseUI.this.searchTextFieldCancelButton.setEnabled(false);
-addButton.setVisible(false); //using setVisible instead of setEnabled cause buttons are overlapping, merely enabling/disabling is giving issues like: saveButton not responding after enabling
-saveButton.setVisible(true);
-editButton.setEnabled(false);
-deleteButton.setEnabled(false);
-cancelButton.setEnabled(true);
-exportToPDFButton.setEnabled(false);
+// email Doubt: PL should not have to make a course and pass. We should only pass the String to model. Model should make an object and pass it further to BL
 
-//other component visibility
-CourseUI.this.searchTextField.setText("");	//cleared main search
-CourseUI.this.searchTextField.setVisible(false);
-titleLabel.setVisible(false);
-titleTextField.setVisible(true);
-
-//table related
-courseTable.setRowSelectionAllowed(false);
-
-}
-});
-cancelButton.addActionListener(new ActionListener(){
-public void actionPerformed(ActionEvent ev)
-{
-//enable/disable buttons
-CourseUI.this.searchTextFieldCancelButton.setEnabled(true);
-addButton.setVisible(true);
-saveButton.setVisible(false);
-editButton.setEnabled(true);
-deleteButton.setEnabled(true);
-cancelButton.setEnabled(false);
-exportToPDFButton.setEnabled(true);
-
-//other component visibility
-CourseUI.this.searchTextField.setVisible(true);
-titleLabel.setVisible(true);
-titleTextField.setText("");
-titleTextField.setVisible(false);
-
-//table related
-courseTable.setRowSelectionAllowed(true);
-
-}
-});
-saveButton.addActionListener(new ActionListener(){
-public void actionPerformed(ActionEvent ev)
-{
-String title = titleTextField.getText().trim();
-if(title.length() == 0)
-{
-JOptionPane.showMessageDialog(CourseUI.this,"Title required","Error",JOptionPane.ERROR_MESSAGE);
-return; //don't go back to "regular view" by enabling/disabling components, stay in this "addButton" view
-}
-try
-{
-//Doubt: PL should not have to make a course and pass. We should only pass the String to model. Model should make an object and pass it further to BL
-CourseInterface course = new Course();
-course.setTitle(title);
-courseModel.add(course);
-JOptionPane.showMessageDialog(CourseUI.this,"Course added successfully!","Success",JOptionPane.INFORMATION_MESSAGE);
-}catch(BLException blException)
-{
-JOptionPane.showMessageDialog(CourseUI.this,blException.getException("title"),"Error",JOptionPane.ERROR_MESSAGE); //here the "title" in blException.getException(title); is name of property against which there is an exception
-return;
-}
-//enable/disable buttons
-CourseUI.this.searchTextFieldCancelButton.setEnabled(true);
-addButton.setVisible(true);
-saveButton.setVisible(false);
-editButton.setEnabled(true);
-deleteButton.setEnabled(true);
-cancelButton.setEnabled(false);
-exportToPDFButton.setEnabled(true);
-
-//other component visibility
-CourseUI.this.searchTextField.setVisible(true);
-titleLabel.setVisible(true);
-titleTextField.setText("");
-titleTextField.setVisible(false);
-
-//table related
-courseTable.setRowSelectionAllowed(true);
-}
-
-});
 }
 public void setCourse(CourseInterface course)
 {
@@ -335,7 +242,6 @@ titleLabel.setText(course.getTitle());
 public void clearCourse()
 {
 titleLabel.setText("");
-
 }
 
 }//inner class end
