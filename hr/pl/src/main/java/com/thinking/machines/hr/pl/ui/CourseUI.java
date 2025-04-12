@@ -152,11 +152,13 @@ coursePanel.clearCourse();
 //methods for changing between modes
 private void setViewMode()
 {
+//important
 this.mode = MODE.VIEW;
-if(courseModel.getRowCount() == 0)
+if(courseModel.getRowCount() == 0) //if no records, why should these three be enabled? so disable them
 {
-searchTextField.setVisible(false);
-searchTextFieldCancelButton.setEnabled(false);
+//note: we request courseModel, and not courseTable, for count
+searchTextField.setEnabled(false);
+searchCancelButton.setEnabled(false);
 courseTable.setEnabled(false);
 }
 else
@@ -166,7 +168,7 @@ searchTextFieldCancelButton.setEnabled(true);
 courseTable.setEnabled(true);
 }
 }
-private void setAddMode()
+private void setAddMode() //same story for all other modes. But still we make new functions in case tomorrow something changes.
 {
 this.mode = MODE.ADD;
 searchTextField.setVisible(false);
@@ -194,7 +196,6 @@ searchTextField.setVisible(false);
 searchTextFieldCancelButton.setEnabled(false);
 courseTable.setEnabled(false);
 }
-
 //inner class
 class CoursePanel extends JPanel
 {
@@ -273,6 +274,7 @@ this.add(titleLabel);
 this.add(clearTitleTextFieldButton);
 this.add(buttonsPanel);
 }
+
 private void addListeners()
 {
 clearTitleTextFieldButton.addActionListener(new ActionListener(){
@@ -282,16 +284,19 @@ titleTextField.setText("");
 titleTextField.requestFocus();
 }
 });
+
 // email Doubt: PL should not have to make a course and pass. We should only pass the String to model. Model should make an object and pass it further to BL
 this.addButton.addActionListener(new ActionListener(){
 public void actionPerformed(ActionEvent ev)
 {
+//first figure which mode, then make changes accordingly
 if(mode==MODE.VIEW)
 {
 coursePanel.setAddMode();
 }
 else
 {
+//logic to add and get back to view mode
 addCourse();
 coursePanel.setViewMode();
 }
@@ -306,9 +311,17 @@ coursePanel.setViewMode();
 });
 
 }
+
 private void addCourse()
 {
-String title = coursePanel.titleTextField.getText();
+String title = titleTextField.getText().trim();
+if(title.length()==0)
+{
+//if we simply return, control will go back to where it was called from and enter setViewMode()
+// ??? assignment
+JOptionPane.showMessageDialog("Title required");
+return;
+}
 CourseInterface tmpCourse;
 tmpCourse = new Course();
 tmpCourse.setTitle(title);
@@ -327,14 +340,17 @@ JOptionPane.showMessageDialog(coursePanel,blException.getException("title"));
 return;
 }
 }
+
 public void setCourse(CourseInterface course)
 {
 titleLabel.setText(course.getTitle());
 }
+
 public void clearCourse()
 {
 titleLabel.setText("");
 }
+
 void setViewMode()
 {
 CourseUI.this.setViewMode();
@@ -362,6 +378,7 @@ exportToPDFButton.setEnabled(true);
 void setAddMode()
 {
 CourseUI.this.setAddMode();
+//
 this.addButton.setText("S");
 this.addButton.setEnabled(true);
 this.editButton.setEnabled(false);
@@ -378,10 +395,11 @@ void setEditMode()
 if(courseTable.getSelectedRow() < 0 || courseTable.getSelectedRow()>=courseModel.getRowCount())
 {
 JOptionPane.showMessageDialog(this,"Select course to edit");
-return;	
+return;	//won't go in edit mode, will stay in view mode
 }
 
 CourseUI.this.setEditMode();
+//
 this.addButton.setEnabled(false);
 this.editButton.setText("U");
 this.editButton.setEnabled(true);
@@ -400,15 +418,17 @@ JOptionPane.showMessageDialog(this,"Select course to delete");
 return;	
 }
 CourseUI.this.setDeleteMode();
+//
 this.addButton.setEnabled(false);
 this.editButton.setEnabled(false);
-this.deleteButton.setEnabled(false);	//should not be allowed to press delete button twice
+this.deleteButton.setEnabled(false);	//delete will also stay disabled. two clicks not allowed.
 this.cancelButton.setEnabled(false);
 this.exportToPDFButton.setEnabled(false);
 }
 void setExportToPDFMode()
 {
 CourseUI.this.setExportToPDFMode();
+//
 this.addButton.setEnabled(false);
 this.editButton.setEnabled(false);
 this.deleteButton.setEnabled(false);
