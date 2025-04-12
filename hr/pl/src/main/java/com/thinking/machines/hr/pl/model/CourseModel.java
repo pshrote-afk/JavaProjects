@@ -85,6 +85,7 @@ public int compare(CourseInterface left,CourseInterface right)
 return left.getTitle().toUpperCase().compareTo(right.getTitle().toUpperCase());
 }
 });
+fireTableDataChanged();
 }
 public void update(CourseInterface course) throws BLException
 {
@@ -97,6 +98,7 @@ public int compare(CourseInterface left,CourseInterface right)
 return left.getTitle().toUpperCase().compareTo(right.getTitle().toUpperCase());
 }
 });
+fireTableDataChanged();
 }
 public void remove(int code) throws BLException
 {

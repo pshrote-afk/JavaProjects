@@ -20,11 +20,15 @@ private JLabel searchErrorLabel;
 private JButton searchTextFieldCancelButton;
 private JTextField searchTextField;
 private CoursePanel coursePanel;
+private enum MODE{VIEW,ADD,EDIT,DELETE,EXPORT_TO_PDF};
+private MODE mode;
 public CourseUI()
 {
 initComponents();
 setAppearance();
 addListeners();
+setViewMode();
+coursePanel.setViewMode();
 }
 private void initComponents()
 {
@@ -145,6 +149,52 @@ coursePanel.setCourse(tmpCourse);
 coursePanel.clearCourse();
 }
 }
+//methods for changing between modes
+private void setViewMode()
+{
+this.mode = MODE.VIEW;
+if(courseModel.getRowCount() == 0)
+{
+searchTextField.setVisible(false);
+searchTextFieldCancelButton.setEnabled(false);
+courseTable.setEnabled(false);
+}
+else
+{
+searchTextField.setVisible(true);
+searchTextFieldCancelButton.setEnabled(true);
+courseTable.setEnabled(true);
+}
+}
+private void setAddMode()
+{
+this.mode = MODE.ADD;
+searchTextField.setVisible(false);
+searchTextFieldCancelButton.setEnabled(false);
+courseTable.setEnabled(false);
+}
+private void setEditMode()
+{
+this.mode = MODE.EDIT;
+searchTextField.setVisible(false);
+searchTextFieldCancelButton.setEnabled(false);
+courseTable.setEnabled(false);
+}
+private void setDeleteMode()
+{
+this.mode = MODE.DELETE;
+searchTextField.setVisible(false);
+searchTextFieldCancelButton.setEnabled(false);
+courseTable.setEnabled(false);
+}
+private void setExportToPDFMode()
+{
+this.mode = MODE.EXPORT_TO_PDF;
+searchTextField.setVisible(false);
+searchTextFieldCancelButton.setEnabled(false);
+courseTable.setEnabled(false);
+}
+
 //inner class
 class CoursePanel extends JPanel
 {
@@ -166,10 +216,10 @@ initComponents();
 setAppearances();
 addListeners();
 }
-public void initComponents()
+private void initComponents()
 {
 titleCaptionLabel = new JLabel("Course");
-titleLabel = new JLabel("temporary text");
+titleLabel = new JLabel();
 titleTextField = new JTextField();
 clearTitleTextFieldButton = new JButton("x");
 addButton = new JButton("A");
@@ -179,7 +229,7 @@ cancelButton = new JButton("D");
 exportToPDFButton = new JButton("E");
 buttonsPanel = new JPanel();
 }
-public void setAppearances()
+private void setAppearances()
 {
 this.setLayout(null);
 int lm = 0; //left margin for CoursePanel
@@ -200,11 +250,11 @@ buttonsPanel.setBorder(BorderFactory.createLineBorder(new Color(175,175,175)));
 //setting up buttonsPanel
 int lm1 = 0;
 int tm1 = 0;
-addButton.setBounds(lm1+20+75,tm1+20,40,40);
-editButton.setBounds(lm1+20+30+20+75,tm1+20,40,40);
-deleteButton.setBounds(lm1+20+30+20+30+20+75,tm1+20,40,40);
-cancelButton.setBounds(lm1+20+30+20+30+20+30+20+75,tm1+20,40,40);
-exportToPDFButton.setBounds(lm1+20+30+20+30+20+30+20+30+20+75,tm1+20,40,40);
+addButton.setBounds(lm1+20+75,tm1+20,50,50);
+editButton.setBounds(lm1+20+30+20+75,tm1+20,50,50);
+deleteButton.setBounds(lm1+20+30+20+30+20+75,tm1+20,50,50);
+cancelButton.setBounds(lm1+20+30+20+30+20+30+20+75,tm1+20,50,50);
+exportToPDFButton.setBounds(lm1+20+30+20+30+20+30+20+30+20+75,tm1+20,50,50);
 
 //adding buttons to buttonsPanel
 buttonsPanel.setLayout(null);
@@ -223,7 +273,7 @@ this.add(titleLabel);
 this.add(clearTitleTextFieldButton);
 this.add(buttonsPanel);
 }
-public void addListeners()
+private void addListeners()
 {
 clearTitleTextFieldButton.addActionListener(new ActionListener(){
 public void actionPerformed(ActionEvent ev)
@@ -233,7 +283,49 @@ titleTextField.requestFocus();
 }
 });
 // email Doubt: PL should not have to make a course and pass. We should only pass the String to model. Model should make an object and pass it further to BL
+this.addButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+if(mode==MODE.VIEW)
+{
+coursePanel.setAddMode();
+}
+else
+{
+addCourse();
+coursePanel.setViewMode();
+}
+}
+});
+this.cancelButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+mode = MODE.VIEW;
+coursePanel.setViewMode();
+}
+});
 
+}
+private void addCourse()
+{
+String title = coursePanel.titleTextField.getText();
+CourseInterface tmpCourse;
+tmpCourse = new Course();
+tmpCourse.setTitle(title);
+try
+{
+courseModel.add(tmpCourse);
+//either course is added, or exception is thrown
+int rowIndex = courseModel.indexOfCourse(tmpCourse);
+courseTable.setRowSelectionInterval(rowIndex,rowIndex);
+Rectangle rectangle = courseTable.getCellRect(rowIndex,0,true);
+courseTable.scrollRectToVisible(rectangle);
+}catch(BLException blException)
+{
+// ??? we dont want "mode" to go back into VIEW mode;
+JOptionPane.showMessageDialog(coursePanel,blException.getException("title"));
+return;
+}
 }
 public void setCourse(CourseInterface course)
 {
@@ -242,6 +334,86 @@ titleLabel.setText(course.getTitle());
 public void clearCourse()
 {
 titleLabel.setText("");
+}
+void setViewMode()
+{
+CourseUI.this.setViewMode();
+titleLabel.setVisible(true);
+titleTextField.setText("");
+titleTextField.setVisible(false);
+clearTitleTextFieldButton.setEnabled(false);
+this.addButton.setText("A");
+this.editButton.setText("E");
+addButton.setEnabled(true);
+cancelButton.setEnabled(false);
+if(courseTable.getRowCount() > 0) //table hablo entries
+{
+editButton.setEnabled(true);
+deleteButton.setEnabled(true);
+exportToPDFButton.setEnabled(true);
+}
+else
+{
+editButton.setEnabled(true);
+deleteButton.setEnabled(true);
+exportToPDFButton.setEnabled(true);
+}
+}
+void setAddMode()
+{
+CourseUI.this.setAddMode();
+this.addButton.setText("S");
+this.addButton.setEnabled(true);
+this.editButton.setEnabled(false);
+this.deleteButton.setEnabled(false);
+this.cancelButton.setEnabled(true);
+this.exportToPDFButton.setEnabled(false);
+titleLabel.setVisible(false);
+titleTextField.setVisible(true);
+clearTitleTextFieldButton.setEnabled(true);
+titleTextField.requestFocus();
+}
+void setEditMode()
+{
+if(courseTable.getSelectedRow() < 0 || courseTable.getSelectedRow()>=courseModel.getRowCount())
+{
+JOptionPane.showMessageDialog(this,"Select course to edit");
+return;	
+}
+
+CourseUI.this.setEditMode();
+this.addButton.setEnabled(false);
+this.editButton.setText("U");
+this.editButton.setEnabled(true);
+this.deleteButton.setEnabled(false);
+this.cancelButton.setEnabled(true);
+this.exportToPDFButton.setEnabled(false);
+titleLabel.setVisible(false);
+titleTextField.setVisible(true);
+clearTitleTextFieldButton.setEnabled(true);
+}
+void setDeleteMode()
+{
+if(courseTable.getSelectedRow() < 0 || courseTable.getSelectedRow()>=courseModel.getRowCount())
+{
+JOptionPane.showMessageDialog(this,"Select course to delete");
+return;	
+}
+CourseUI.this.setDeleteMode();
+this.addButton.setEnabled(false);
+this.editButton.setEnabled(false);
+this.deleteButton.setEnabled(false);	//should not be allowed to press delete button twice
+this.cancelButton.setEnabled(false);
+this.exportToPDFButton.setEnabled(false);
+}
+void setExportToPDFMode()
+{
+CourseUI.this.setExportToPDFMode();
+this.addButton.setEnabled(false);
+this.editButton.setEnabled(false);
+this.deleteButton.setEnabled(false);
+this.cancelButton.setEnabled(false);
+this.exportToPDFButton.setEnabled(false);
 }
 
 }//inner class end
