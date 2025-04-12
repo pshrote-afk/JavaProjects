@@ -320,6 +320,13 @@ coursePanel.setViewMode();
 }
 });
 
+this.deleteButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+coursePanel.setDeleteMode();
+}
+});
+
 this.cancelButton.addActionListener(new ActionListener(){
 public void actionPerformed(ActionEvent ev)
 {
@@ -398,7 +405,33 @@ JOptionPane.showMessageDialog(coursePanel,blException.getException("title"));
 return false;
 }
 }
-
+private void deleteCourse()
+{
+String title = course.getTitle();
+int code = course.getCode();
+int selectedOption = JOptionPane.showConfirmDialog(this,"Delete "+title+"?","Confirmation",JOptionPane.YES_NO_OPTION);
+if(selectedOption == JOptionPane.NO_OPTION || selectedOption == JOptionPane.CLOSED_OPTION)
+{
+return;
+}
+try
+{
+courseModel.remove(code);
+}catch(BLException blException)
+{
+if(blException.hasGenericException())
+{
+JOptionPane.showMessageDialog(this,"Course not deleted. "+blException.getGenericException());
+}
+else
+{
+JOptionPane.showMessageDialog(this,"Course not deleted. "+blException.getException("code"));
+}
+return;
+}
+coursePanel.clearCourse();
+JOptionPane.showMessageDialog(this,"Course "+title+" deleted");
+}
 
 public void setCourse(CourseInterface course)
 {
@@ -407,6 +440,7 @@ titleLabel.setText(course.getTitle());
 }
 public void clearCourse()
 {
+this.course = null;
 titleLabel.setText("");
 }
 
@@ -483,6 +517,9 @@ this.editButton.setEnabled(false);
 this.deleteButton.setEnabled(false);	//delete will also stay disabled. two clicks not allowed.
 this.cancelButton.setEnabled(false);
 this.exportToPDFButton.setEnabled(false);
+//delete is a special case. calling deleteCourse function from within coursePanel.setDeleteMode(), because doing this in deleteButton listener complicates logic
+deleteCourse();
+this.setViewMode();
 }
 void setExportToPDFMode()
 {
