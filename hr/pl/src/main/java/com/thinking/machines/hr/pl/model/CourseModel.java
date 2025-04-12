@@ -102,7 +102,7 @@ fireTableDataChanged();
 }
 public void remove(int code) throws BLException
 {
-courseManager.removeCourse(code);
+courseManager.removeCourse(code); //may throw exception like "invalid code"
 Iterator<CourseInterface> iterator = this.plCoursesList.iterator();
 int index = 0;
 CourseInterface tmpCourse;
@@ -112,9 +112,11 @@ tmpCourse = iterator.next();
 if(tmpCourse.getCode() == code)
 {
 this.plCoursesList.remove(index);
+break;
 }
 index++;
 }
+fireTableDataChanged();
 }
 public int indexOfCourse(CourseInterface course) throws BLException
 {
