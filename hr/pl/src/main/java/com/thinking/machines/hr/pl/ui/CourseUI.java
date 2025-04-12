@@ -158,7 +158,7 @@ if(courseModel.getRowCount() == 0) //if no records, why should these three be en
 {
 //note: we request courseModel, and not courseTable, for count
 searchTextField.setEnabled(false);
-searchCancelButton.setEnabled(false);
+searchTextFieldCancelButton.setEnabled(false);
 courseTable.setEnabled(false);
 }
 else
@@ -285,7 +285,6 @@ titleTextField.requestFocus();
 }
 });
 
-// email Doubt: PL should not have to make a course and pass. We should only pass the String to model. Model should make an object and pass it further to BL
 this.addButton.addActionListener(new ActionListener(){
 public void actionPerformed(ActionEvent ev)
 {
@@ -297,11 +296,30 @@ coursePanel.setAddMode();
 else
 {
 //logic to add and get back to view mode
-addCourse();
+if(addCourse())
+{
 coursePanel.setViewMode();
 }
 }
+}
 });
+this.editButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+if(mode == MODE.VIEW)
+{
+coursePanel.setEditMode();
+}
+else
+{
+if(updateCourse())
+{
+coursePanel.setViewMode();
+}
+}
+}
+});
+
 this.cancelButton.addActionListener(new ActionListener(){
 public void actionPerformed(ActionEvent ev)
 {
@@ -309,18 +327,17 @@ mode = MODE.VIEW;
 coursePanel.setViewMode();
 }
 });
-
 }
 
-private void addCourse()
+// email Doubt: PL should not have to make a course and pass. We should only pass the String to model. Model should make an object and pass it further to BL
+private boolean addCourse()
 {
 String title = titleTextField.getText().trim();
 if(title.length()==0)
 {
 //if we simply return, control will go back to where it was called from and enter setViewMode()
-// ??? assignment
-JOptionPane.showMessageDialog("Title required");
-return;
+JOptionPane.showMessageDialog(coursePanel,"Title required");
+return false;
 }
 CourseInterface tmpCourse;
 tmpCourse = new Course();
@@ -333,19 +350,61 @@ int rowIndex = courseModel.indexOfCourse(tmpCourse);
 courseTable.setRowSelectionInterval(rowIndex,rowIndex);
 Rectangle rectangle = courseTable.getCellRect(rowIndex,0,true);
 courseTable.scrollRectToVisible(rectangle);
+return true;
 }catch(BLException blException)
 {
-// ??? we dont want "mode" to go back into VIEW mode;
+if(blException.hasGenericException())
+{
+JOptionPane.showMessageDialog(coursePanel,blException.getGenericException());
+}
+else
+{
 JOptionPane.showMessageDialog(coursePanel,blException.getException("title"));
-return;
+}
+return false;
 }
 }
+private boolean updateCourse() 
+{
+String title = titleTextField.getText().trim();
+if(title.length()==0)
+{
+JOptionPane.showMessageDialog(this,"Title required");
+return false;
+}
+CourseInterface tmpCourse;
+tmpCourse = new Course();
+tmpCourse.setTitle(title);
+tmpCourse.setCode(course.getCode());
+try
+{
+courseModel.update(tmpCourse);
+//either course is updated, or exception is thrown
+int rowIndex = courseModel.indexOfCourse(tmpCourse);
+courseTable.setRowSelectionInterval(rowIndex,rowIndex);
+Rectangle rectangle = courseTable.getCellRect(rowIndex,0,true);
+courseTable.scrollRectToVisible(rectangle);
+return true;
+}catch(BLException blException)
+{
+if(blException.hasGenericException())
+{
+JOptionPane.showMessageDialog(coursePanel,blException.getGenericException());
+}
+else
+{
+JOptionPane.showMessageDialog(coursePanel,blException.getException("title"));
+}
+return false;
+}
+}
+
 
 public void setCourse(CourseInterface course)
 {
+this.course = course;
 titleLabel.setText(course.getTitle());
 }
-
 public void clearCourse()
 {
 titleLabel.setText("");
@@ -397,7 +456,6 @@ if(courseTable.getSelectedRow() < 0 || courseTable.getSelectedRow()>=courseModel
 JOptionPane.showMessageDialog(this,"Select course to edit");
 return;	//won't go in edit mode, will stay in view mode
 }
-
 CourseUI.this.setEditMode();
 //
 this.addButton.setEnabled(false);
@@ -407,6 +465,7 @@ this.deleteButton.setEnabled(false);
 this.cancelButton.setEnabled(true);
 this.exportToPDFButton.setEnabled(false);
 titleLabel.setVisible(false);
+titleTextField.setText(course.getTitle());
 titleTextField.setVisible(true);
 clearTitleTextFieldButton.setEnabled(true);
 }
