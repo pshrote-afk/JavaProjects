@@ -3,4 +3,5 @@ dependencies {
 implementation files('../dl/dist/hr-dl-1.0.jar')
 implementation files('../bl/build/libs/bl.jar')
 implementation files('../common/dist/hr-common.jar')
+implementation fileTree(dir: '../../../itext7/',include: ['*.jar'])
 }

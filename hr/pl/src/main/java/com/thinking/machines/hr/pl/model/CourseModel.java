@@ -2,6 +2,15 @@ package com.thinking.machines.hr.pl.model;
 import java.util.*; //for List
 import javax.swing.*;
 import javax.swing.table.*; //for AbstractTableModel
+import java.io.*; //for File class
+//itext
+import com.itextpdf.kernel.pdf.*;
+import com.itextpdf.layout.*;
+import com.itextpdf.layout.element.*; //for Paragraph
+import com.itextpdf.kernel.font.*;
+import com.itextpdf.io.font.constants.*;
+import com.itextpdf.layout.property.*;
+import com.itextpdf.io.image.*;
 //BL
 import com.thinking.machines.hr.bl.interfaces.managers.*;
 import com.thinking.machines.hr.bl.interfaces.pojo.*;
@@ -11,7 +20,7 @@ import com.thinking.machines.hr.bl.exceptions.*;
 public class CourseModel extends AbstractTableModel
 {
 private String columnTitle[];
-private List<CourseInterface> plCoursesList;
+private java.util.List<CourseInterface> plCoursesList;
 private CourseManagerInterface courseManager;
 public CourseModel()
 {
@@ -118,6 +127,88 @@ index++;
 }
 fireTableDataChanged();
 }
+
+public void exportToPDF(File file) throws BLException
+{
+if(file.getName().endsWith(".pdf")==false)
+{
+String newFileName = file.getName() + ".pdf";
+String path = file.getParent();
+if(path==null)
+{
+path = ".";
+}
+file = new File(path,newFileName);
+}
+try
+{
+PdfWriter pdfWriter = new PdfWriter(file);
+PdfDocument pdfDocument = new PdfDocument(pdfWriter);
+Document document = new Document(pdfDocument);
+int r = 0;
+int sno = 0;
+int pageSize = 5;
+int pageNumber = 0;
+boolean newPage = true;
+Table pdfTable = null;
+document.setMargins(15,15,15,15);
+while(r < plCoursesList.size())
+{
+if(newPage==true) //create header,
+{
+Image companyLogo = new Image(ImageDataFactory.create("C:/JavaProjects/hr/pl/src/main/java/com/thinking/machines/hr/pl/icons/company-logo.png"));
+companyLogo.setFixedPosition(0,800);
+companyLogo.scaleToFit(50,50);
+Paragraph companyName = new Paragraph().setTextAlignment(TextAlignment.CENTER);
+companyName.add("Company Name");
+
+pageNumber++;
+Paragraph pageNumberParagraph = new Paragraph().setTextAlignment(TextAlignment.RIGHT);
+pageNumberParagraph.add(String.valueOf(pageNumber));
+
+Paragraph reportTitle = new Paragraph(); 
+reportTitle.add("Courses").setTextAlignment(TextAlignment.LEFT);
+
+pdfTable = new Table(2);
+pdfTable.addHeaderCell("Sr.No.");
+pdfTable.addHeaderCell("Course");
+
+document.add(companyLogo);
+document.add(companyName);
+document.add(pageNumberParagraph);
+document.add(reportTitle);
+newPage = false;
+}
+sno++;
+//add row
+pdfTable.addCell(new Cell().add(new Paragraph(String.valueOf(sno))));
+pdfTable.addCell(new Cell().add(new Paragraph(plCoursesList.get(r).getTitle())));
+
+if(sno%pageSize==0 || sno==plCoursesList.size())
+{
+//create footer
+document.add(pdfTable);
+document.add(new Paragraph("Software by: Paras Shrote\nwww.github.com/pshrote-afk"));
+//
+if(sno < plCoursesList.size())
+{
+pdfDocument.addNewPage();
+document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+}
+newPage=true;
+}
+
+r++;
+}
+document.close();
+}catch(Exception exception)
+{
+BLException blException = new BLException();
+blException.setGenericException(exception.getMessage());
+throw blException;
+}
+}
+
 public int indexOfCourse(CourseInterface course) throws BLException
 {
 Iterator<CourseInterface> iterator = this.plCoursesList.iterator();

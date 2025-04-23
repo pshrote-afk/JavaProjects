@@ -4,6 +4,8 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.filechooser.*; //for JFileChooser class
+import java.io.*; //for File
 //BL
 import com.thinking.machines.hr.bl.interfaces.pojo.*;
 import com.thinking.machines.hr.bl.pojo.*;
@@ -334,7 +336,50 @@ mode = MODE.VIEW;
 coursePanel.setViewMode();
 }
 });
+this.exportToPDFButton.addActionListener(new ActionListener(){
+public void actionPerformed(ActionEvent ev)
+{
+coursePanel.setExportToPDFMode();
+JFileChooser jFileChooser = new JFileChooser();
+jFileChooser.setCurrentDirectory(new File(".")); //by default - current working directory
+jFileChooser.addChoosableFileFilter(new javax.swing.filechooser.FileFilter(){
+public boolean accept(File file)
+{
+if(file.isDirectory()) return true;
+if(file.getName().endsWith(".pdf")) return true;
+return false;
 }
+public String getDescription()
+{
+return ".pdf files";
+}
+});
+int selectedOption = jFileChooser.showSaveDialog(CourseUI.this);
+if(selectedOption==JFileChooser.APPROVE_OPTION)
+{
+File file = jFileChooser.getSelectedFile();
+try
+{
+courseModel.exportToPDF(file);
+}catch(BLException blException)
+{
+if(blException.hasGenericException())
+{
+JOptionPane.showMessageDialog(coursePanel,blException.getGenericException());
+}
+coursePanel.setViewMode();
+return;
+}
+//control reached here means no exception and PDF created;
+JOptionPane.showMessageDialog(CourseUI.this,"PDF file successfully created","PDF created",JOptionPane.INFORMATION_MESSAGE);
+}
+coursePanel.setViewMode();
+}
+});
+
+} //end of CourseUI addListeners()
+
+
 
 // email Doubt: PL should not have to make a course and pass. We should only pass the String to model. Model should make an object and pass it further to BL
 private boolean addCourse()
@@ -342,7 +387,7 @@ private boolean addCourse()
 String title = titleTextField.getText().trim();
 if(title.length()==0)
 {
-//if we simply return, control will go back to where it was called from and enter setViewMode()
+//if we simply return, control will go back to where it was called from and enter setViewMode(). Hence return a boolean.
 JOptionPane.showMessageDialog(coursePanel,"Title required");
 return false;
 }
@@ -502,6 +547,7 @@ titleLabel.setVisible(false);
 titleTextField.setText(course.getTitle());
 titleTextField.setVisible(true);
 clearTitleTextFieldButton.setEnabled(true);
+titleTextField.requestFocus();
 }
 void setDeleteMode()
 {
