@@ -212,6 +212,13 @@ private JButton cancelButton;
 private JButton exportToPDFButton;
 private JPanel buttonsPanel;
 private CourseInterface course;
+private ImageIcon addButtonIcon;
+private ImageIcon editButtonIcon;
+private ImageIcon deleteButtonIcon;
+private ImageIcon cancelButtonIcon;
+private ImageIcon exportToPDFButtonIcon;
+private ImageIcon saveButtonIcon;
+private ImageIcon updateButtonIcon;
 CoursePanel()
 {
 this.setBorder(BorderFactory.createLineBorder(new Color(175,175,175)));
@@ -224,12 +231,22 @@ private void initComponents()
 titleCaptionLabel = new JLabel("Course");
 titleLabel = new JLabel();
 titleTextField = new JTextField();
+
+addButtonIcon = new ImageIcon("../icons/addButtonIcon.png");
+
+/*editButtonIcon;
+deleteButtonIcon;
+cancelButtonIcon;
+exportToPDFButtonIcon = new ImageIcon("../icons/exportToPDF.png");
+saveButtonIcon;
+updateButtonIcon;
+*/
 clearTitleTextFieldButton = new JButton("x");
-addButton = new JButton("A");
+addButton = new JButton(addButtonIcon);
 editButton = new JButton("B");
 deleteButton = new JButton("C");
 cancelButton = new JButton("D");
-exportToPDFButton = new JButton("E");
+exportToPDFButton = new JButton(exportToPDFButtonIcon);
 buttonsPanel = new JPanel();
 }
 private void setAppearances()
@@ -496,8 +513,8 @@ titleLabel.setVisible(true);
 titleTextField.setText("");
 titleTextField.setVisible(false);
 clearTitleTextFieldButton.setEnabled(false);
-this.addButton.setText("A");
-this.editButton.setText("E");
+this.addButton.setIcon(addButtonIcon);
+this.editButton.setText("B");
 addButton.setEnabled(true);
 cancelButton.setEnabled(false);
 if(courseTable.getRowCount() > 0) //table hablo entries

@@ -147,10 +147,12 @@ PdfDocument pdfDocument = new PdfDocument(pdfWriter);
 Document document = new Document(pdfDocument);
 int r = 0;
 int sno = 0;
-int pageSize = 5;
+int pageSize = 25;
 int pageNumber = 0;
 boolean newPage = true;
 Table pdfTable = null;
+Div lineSpacer = new Div().setHeight(20);
+PdfFont timesRoman = PdfFontFactory.createFont("Times-Roman");
 document.setMargins(15,15,15,15);
 while(r < plCoursesList.size())
 {
@@ -167,11 +169,12 @@ Paragraph pageNumberParagraph = new Paragraph().setTextAlignment(TextAlignment.R
 pageNumberParagraph.add(String.valueOf(pageNumber));
 
 Paragraph reportTitle = new Paragraph(); 
-reportTitle.add("Courses").setTextAlignment(TextAlignment.LEFT);
+reportTitle.add("Courses").setTextAlignment(TextAlignment.CENTER);
 
 pdfTable = new Table(2);
-pdfTable.addHeaderCell("Sr.No.");
-pdfTable.addHeaderCell("Course");
+pdfTable.setHorizontalAlignment(HorizontalAlignment.CENTER);
+pdfTable.addHeaderCell(new Cell().add(new Paragraph(("Sr.No.")).setFont(timesRoman).setFontSize(16)));
+pdfTable.addHeaderCell(new Cell().add(new Paragraph(("Course")).setFont(timesRoman).setFontSize(16)));
 
 document.add(companyLogo);
 document.add(companyName);
@@ -181,14 +184,16 @@ newPage = false;
 }
 sno++;
 //add row
-pdfTable.addCell(new Cell().add(new Paragraph(String.valueOf(sno))));
-pdfTable.addCell(new Cell().add(new Paragraph(plCoursesList.get(r).getTitle())));
+
+pdfTable.addCell(new Cell().add(new Paragraph(String.valueOf(sno))).setTextAlignment(TextAlignment.RIGHT).setFont(timesRoman));
+pdfTable.addCell(new Cell().add(new Paragraph(plCoursesList.get(r).getTitle())).setTextAlignment(TextAlignment.LEFT).setFont(timesRoman).setItalic());
 
 if(sno%pageSize==0 || sno==plCoursesList.size())
 {
 //create footer
 document.add(pdfTable);
-document.add(new Paragraph("Software by: Paras Shrote\nwww.github.com/pshrote-afk"));
+document.add(lineSpacer);
+document.add(new Paragraph("Software by: Paras Shrote\nwww.github.com/pshrote-afk").setFont(timesRoman).setFontSize(10));
 //
 if(sno < plCoursesList.size())
 {
