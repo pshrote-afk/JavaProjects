@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.filechooser.*; //for JFileChooser class
 import java.io.*; //for File
+import java.net.URL; //for URL of ImageIcon
 //BL
 import com.thinking.machines.hr.bl.interfaces.pojo.*;
 import com.thinking.machines.hr.bl.pojo.*;
@@ -24,6 +25,14 @@ private JTextField searchTextField;
 private CoursePanel coursePanel;
 private enum MODE{VIEW,ADD,EDIT,DELETE,EXPORT_TO_PDF};
 private MODE mode;
+private ImageIcon logoIcon;
+private ImageIcon addIcon;
+private ImageIcon editIcon;
+private ImageIcon deleteIcon;
+private ImageIcon cancelIcon;
+private ImageIcon pdfIcon;
+private ImageIcon saveIcon;
+private ImageIcon updateIcon;
 public CourseUI()
 {
 initComponents();
@@ -34,7 +43,7 @@ coursePanel.setViewMode();
 }
 private void initComponents()
 {
-//container, table, scroll pane
+ //container, table, scroll pane
 setDefaultCloseOperation(EXIT_ON_CLOSE);
 container = getContentPane();
 courseModel = new CourseModel();
@@ -44,7 +53,7 @@ scrollPane = new JScrollPane(this.courseTable,ScrollPaneConstants.VERTICAL_SCROL
 titleLabel = new JLabel("Courses");
 searchLabel = new JLabel("Search");
 searchErrorLabel = new JLabel();
-searchTextFieldCancelButton = new JButton("X");
+searchTextFieldCancelButton = new JButton();
 searchTextField = new JTextField(); //don't set width now, cause we're going to set it using setBounds();
 coursePanel = new CoursePanel();
 }
@@ -87,6 +96,17 @@ searchTextFieldCancelButton.setBounds(lm+10+75+300+5,tm+10+40+10,30,30);
 searchErrorLabel.setBounds(lm+10+75+300+5-65,tm+10+40+10-25,75,30);
 scrollPane.setBounds(lm+10,tm+10+40+10+30+10,450,300);
 coursePanel.setBounds(lm+10,tm+10+40+10+30+10+300+10,450,140);
+//icons
+logoIcon = new ImageIcon(getClass().getResource("/icons/logo.png")); //getResource() accepts only / frontslash
+setIconImage(logoIcon.getImage());
+//for button icons
+addIcon = new ImageIcon(getClass().getResource("/icons/add_icon.png"));
+editIcon = new ImageIcon(getClass().getResource("/icons/edit_icon.png"));
+deleteIcon = new ImageIcon(getClass().getResource("/icons/delete_icon.png"));
+cancelIcon = new ImageIcon(getClass().getResource("/icons/cancel_icon.png"));
+pdfIcon = new ImageIcon(getClass().getResource("/icons/pdf_icon.png"));
+saveIcon = new ImageIcon(getClass().getResource("/icons/save_icon.png"));
+updateIcon = new ImageIcon(getClass().getResource("/icons/update_icon.png"));
 //add to container
 container.setLayout(null);
 container.add(titleLabel);
@@ -212,13 +232,6 @@ private JButton cancelButton;
 private JButton exportToPDFButton;
 private JPanel buttonsPanel;
 private CourseInterface course;
-private ImageIcon addButtonIcon;
-private ImageIcon editButtonIcon;
-private ImageIcon deleteButtonIcon;
-private ImageIcon cancelButtonIcon;
-private ImageIcon exportToPDFButtonIcon;
-private ImageIcon saveButtonIcon;
-private ImageIcon updateButtonIcon;
 CoursePanel()
 {
 this.setBorder(BorderFactory.createLineBorder(new Color(175,175,175)));
@@ -231,22 +244,26 @@ private void initComponents()
 titleCaptionLabel = new JLabel("Course");
 titleLabel = new JLabel();
 titleTextField = new JTextField();
+clearTitleTextFieldButton = new JButton();
 
-addButtonIcon = new ImageIcon("../icons/addButtonIcon.png");
+addButton = new JButton(addIcon);
+editButton = new JButton(editIcon);
+deleteButton = new JButton(deleteIcon);
+cancelButton = new JButton(cancelIcon);
+exportToPDFButton = new JButton(pdfIcon);
+//test: setting icons, instead of just adding them to constructor
+editButton.setIcon(editIcon);
+deleteButton.setIcon(deleteIcon);
+cancelButton.setIcon(cancelIcon);
+exportToPDFButton.setIcon(pdfIcon);
 
-/*editButtonIcon;
-deleteButtonIcon;
-cancelButtonIcon;
-exportToPDFButtonIcon = new ImageIcon("../icons/exportToPDF.png");
-saveButtonIcon;
-updateButtonIcon;
-*/
-clearTitleTextFieldButton = new JButton("x");
-addButton = new JButton(addButtonIcon);
-editButton = new JButton("B");
-deleteButton = new JButton("C");
-cancelButton = new JButton("D");
-exportToPDFButton = new JButton(exportToPDFButtonIcon);
+clearTitleTextFieldButton.setMargin(new Insets(0, 0, 0, 0));
+clearTitleTextFieldButton.setFont(new Font("Arial", Font.PLAIN, 12)); // or even 10
+CourseUI.this.searchTextFieldCancelButton.setMargin(new Insets(0, 0, 0, 0));
+CourseUI.this.searchTextFieldCancelButton.setFont(new Font("Arial", Font.PLAIN, 12)); // or even 10
+clearTitleTextFieldButton.setText("X");
+CourseUI.this.searchTextFieldCancelButton.setText("X");
+
 buttonsPanel = new JPanel();
 }
 private void setAppearances()
@@ -270,11 +287,11 @@ buttonsPanel.setBorder(BorderFactory.createLineBorder(new Color(175,175,175)));
 //setting up buttonsPanel
 int lm1 = 0;
 int tm1 = 0;
-addButton.setBounds(lm1+20+75,tm1+20,50,50);
-editButton.setBounds(lm1+20+30+20+75,tm1+20,50,50);
-deleteButton.setBounds(lm1+20+30+20+30+20+75,tm1+20,50,50);
-cancelButton.setBounds(lm1+20+30+20+30+20+30+20+75,tm1+20,50,50);
-exportToPDFButton.setBounds(lm1+20+30+20+30+20+30+20+30+20+75,tm1+20,50,50);
+addButton.setBounds(lm1+20+75,tm1+20,32,32);
+editButton.setBounds(lm1+20+30+20+75,tm1+20,32,32);
+deleteButton.setBounds(lm1+20+30+20+30+20+75,tm1+20,32,32);
+cancelButton.setBounds(lm1+20+30+20+30+20+30+20+75,tm1+20,32,32);
+exportToPDFButton.setBounds(lm1+20+30+20+30+20+30+20+30+20+75,tm1+20,32,32);
 
 //adding buttons to buttonsPanel
 buttonsPanel.setLayout(null);
@@ -513,8 +530,11 @@ titleLabel.setVisible(true);
 titleTextField.setText("");
 titleTextField.setVisible(false);
 clearTitleTextFieldButton.setEnabled(false);
-this.addButton.setIcon(addButtonIcon);
-this.editButton.setText("B");
+this.addButton.setIcon(addIcon);
+this.editButton.setIcon(editIcon);
+this.deleteButton.setIcon(deleteIcon);
+this.cancelButton.setIcon(cancelIcon);
+this.exportToPDFButton.setIcon(pdfIcon);
 addButton.setEnabled(true);
 cancelButton.setEnabled(false);
 if(courseTable.getRowCount() > 0) //table hablo entries
@@ -534,7 +554,7 @@ void setAddMode()
 {
 CourseUI.this.setAddMode();
 //
-this.addButton.setText("S");
+this.addButton.setIcon(saveIcon);
 this.addButton.setEnabled(true);
 this.editButton.setEnabled(false);
 this.deleteButton.setEnabled(false);
@@ -555,7 +575,7 @@ return;	//won't go in edit mode, will stay in view mode
 CourseUI.this.setEditMode();
 //
 this.addButton.setEnabled(false);
-this.editButton.setText("U");
+this.editButton.setIcon(updateIcon);
 this.editButton.setEnabled(true);
 this.deleteButton.setEnabled(false);
 this.cancelButton.setEnabled(true);

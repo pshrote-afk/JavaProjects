@@ -158,8 +158,8 @@ while(r < plCoursesList.size())
 {
 if(newPage==true) //create header,
 {
-Image companyLogo = new Image(ImageDataFactory.create("C:/JavaProjects/hr/pl/src/main/java/com/thinking/machines/hr/pl/icons/company-logo.png"));
-companyLogo.setFixedPosition(0,800);
+Image companyLogo = new Image(ImageDataFactory.create(getClass().getResource("/icons/logo.png")));
+companyLogo.setFixedPosition(0+5,800-10);
 companyLogo.scaleToFit(50,50);
 Paragraph companyName = new Paragraph().setTextAlignment(TextAlignment.CENTER);
 companyName.add("Company Name");

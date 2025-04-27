@@ -1,31 +1,25 @@
-41        
-34        
+43        
+32        
 1
 Kotlin
-2
-c
-3
-c++
 5
-canva
+Canva
 6
 html
 7
 Svelte
 9
 Cascading Style Sheets
-10
-vue.js
 11
 Node.js
 13
 React
 14
-rust
+Rust
 15
 bhailang
 17
-typescript
+Typescript
 18
 XML
 20
@@ -43,7 +37,7 @@ next.JS
 27
 AWS Lambda
 28
-Ember.js
+Ember.JS
 29
 React Native
 30
@@ -52,8 +46,6 @@ Preact
 Solid.js
 32
 Google Cloud Functions
-33
-Deno
 34
 Ruby on Rails
 35
@@ -68,3 +60,7 @@ LaTeX
 JSON
 41
 Swift
+42
+Deno
+43
+C/C++
