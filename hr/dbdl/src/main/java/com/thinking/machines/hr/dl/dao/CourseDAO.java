@@ -3,65 +3,49 @@ import com.thinking.machines.hr.dl.interfaces.dao.*;
 import com.thinking.machines.hr.dl.interfaces.dto.*;
 import com.thinking.machines.hr.dl.dto.*;
 import com.thinking.machines.hr.dl.exceptions.*;
+
 import java.util.*;
 import java.io.*;
+import java.sql.*;
 public class CourseDAO implements CourseDAOInterface
 {
 private static final String FILE_NAME = "course.data";
 public void add(CourseDTOInterface courseDTO) throws DAOException
 {
+if(courseDTO==null) throw new DAOException("Course is null");
 String title = courseDTO.getTitle();
 if(title==null) throw new DAOException("Title is null");
 title=title.trim();
 if(title.length()==0) throw new DAOException("Length of title is zero");
-int lastGeneratedCode=0;
-int recordCount=0;
-String lastGeneratedCodeString="";
-String recordCountString="";
+Connection connection = DAOConnection.getConnection();
 try
 {
-File file = new File(FILE_NAME);
-RandomAccessFile randomAccessFile;
-randomAccessFile = new RandomAccessFile(file,"rw");
-//if file doesnt already exist, initialize file
-if(randomAccessFile.length()==0)
+PreparedStatement prepareStatement = connection.prepareStatement("SELECT * FROM course WHERE title=?");
+prepareStatement.setString(1,title);
+ResultSet resultSet;
+resultSet = prepareStatement.executeQuery();
+if(resultSet.next())
 {
-//control enters means new file created
-randomAccessFile.writeBytes(String.format("%-10d",lastGeneratedCode) + "\n");
-randomAccessFile.writeBytes(String.format("%-10d",recordCount) + "\n");
+resultSet.close();
+prepareStatement.close();
+connection.close();
+throw new DAOException("Course title already exists");
 }
-else
+resultSet.close();
+prepareStatement.close();
+prepareStatement = connection.prepareStatement("INSERT INTO course (title) VALUES (?)", Statement.RETURN_GENERATED_KEYS);
+prepareStatement.setString(1,title);
+prepareStatement.executeUpdate();
+resultSet = prepareStatement.getGeneratedKeys();
+resultSet.next();
+int code = resultSet.getInt(1);
+resultSet.close();
+prepareStatement.close();
+connection.close();
+courseDTO.setCode(code);
+}catch(SQLException sqlException)
 {
-lastGeneratedCodeString = randomAccessFile.readLine().trim();
-lastGeneratedCode = Integer.parseInt(lastGeneratedCodeString);
-recordCountString = randomAccessFile.readLine().trim();
-recordCount = Integer.parseInt(recordCountString);
-}
-int fCode;
-String fTitle;
-while(randomAccessFile.getFilePointer() < randomAccessFile.length()) //loop to find if title already exists
-{
-fCode = Integer.parseInt(randomAccessFile.readLine());
-fTitle = randomAccessFile.readLine();
-if(title.equalsIgnoreCase(fTitle))
-{
-throw new DAOException("Title already exists against code: "+fCode);
-}
-}
-//control reaches here means title is unique
-lastGeneratedCode++;
-recordCount++;
-randomAccessFile.writeBytes(lastGeneratedCode + "\n");
-randomAccessFile.writeBytes(title + "\n");
-courseDTO.setCode(lastGeneratedCode);
-//now update header
-randomAccessFile.seek(0);
-randomAccessFile.writeBytes(String.format("%-10d",lastGeneratedCode) + "\n");
-randomAccessFile.writeBytes(String.format("%-10d",recordCount) + "\n");
-randomAccessFile.close();
-}catch(IOException ioException)
-{
-throw new DAOException(ioException.getMessage());
+throw new DAOException(sqlException.getMessage());
 }
 }
 public void update(CourseDTOInterface courseDTO) throws DAOException
@@ -191,34 +175,24 @@ public Set<CourseDTOInterface> getAll() throws DAOException
 TreeSet<CourseDTOInterface> treeSet1 = new TreeSet<>();
 try
 {
-File file = new File(FILE_NAME);
-if(file.exists()==false) return treeSet1;
-RandomAccessFile randomAccessFile;
-randomAccessFile = new RandomAccessFile(file,"rw");
-if(file.length()==0)
-{
-randomAccessFile.close();
-return treeSet1;
-}
-randomAccessFile.readLine(); //read header
-randomAccessFile.readLine();
-int fCode;
-String fTitle;
+Connection connection = DAOConnection.getConnection();
+PreparedStatement prepareStatement = connection.prepareStatement("SELECT * FROM course");
+ResultSet resultSet = prepareStatement.executeQuery();
 CourseDTOInterface courseDTO;
-while(randomAccessFile.getFilePointer() < randomAccessFile.length())
+while(resultSet.next())
 {
-fCode = Integer.parseInt(randomAccessFile.readLine());
-fTitle = randomAccessFile.readLine();
 courseDTO = new CourseDTO();
-courseDTO.setCode(fCode);
-courseDTO.setTitle(fTitle);
+courseDTO.setCode(resultSet.getInt("code"));
+courseDTO.setTitle(resultSet.getString("title").trim());
 treeSet1.add(courseDTO);
 }
-randomAccessFile.close();
+connection.close();
+prepareStatement.close();
+resultSet.close();
 return treeSet1;
-}catch(IOException ioException)
+}catch(Exception exception)
 {
-throw new DAOException(ioException.getMessage());
+throw new DAOException(exception.getMessage());
 }
 }
 public CourseDTOInterface getByCode(int code) throws DAOException
