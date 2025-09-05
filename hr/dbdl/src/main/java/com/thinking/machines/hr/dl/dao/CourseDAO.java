@@ -190,9 +190,9 @@ connection.close();
 prepareStatement.close();
 resultSet.close();
 return treeSet1;
-}catch(Exception exception)
+}catch(SQLException sqlException)
 {
-throw new DAOException(exception.getMessage());
+throw new DAOException(sqlException.getMessage());
 }
 }
 public CourseDTOInterface getByCode(int code) throws DAOException
