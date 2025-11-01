@@ -1,0 +1,1 @@
+C:\JavaProjects\TMComponents> java -classpath build\libs\TMComponents.jar;. com.thinking.machines.tmcomponents.swing.TMDatePicker 10 2025
