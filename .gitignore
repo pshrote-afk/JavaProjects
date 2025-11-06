@@ -1,18 +1,21 @@
+#Data Layer
+hr/dbdl/.gradle
+hr/dbdl/bin/
+hr/dbdl/build/
+#Business Layer
 hr/bl/.gradle
 hr/bl/bin/
 hr/bl/build/
-
+#Presentation Layer
 hr/pl/.gradle
 hr/pl/bin/
 hr/pl/build/
 hr/pl/toStartApplication.txt
-hr/pl/course.data		#file in which course data is saved 
-hr/pl/course.tmp		#temporary file created while editing course.data
-hr/pl/course_back.data		#backup of course.data
-
-hr/dbdl/.gradle
-hr/dbdl/bin/
-hr/dbdl/build/
-
+#following is the file in which course data is saved
+hr/pl/course.data
+#following is the temporary file created while editing course.data
+hr/pl/course.tmp
+#following is the backup of course.data
+hr/pl/course_back.data
 
 
