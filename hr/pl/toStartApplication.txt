@@ -1,2 +1,0 @@
-Include .jar file of common folder and of all 3 layers, pl\libs\itext\*
-java -classpath c:\JavaProjects\hr\common\dist\hr-common.jar;c:\JavaProjects\hr\dl\dist\hr-dl-1.0.jar;c:\JavaProjects\hr\bl\build\libs\bl.jar;c:\JavaProjects\hr\pl\build\libs\pl.jar;c:\JavaProjects\hr\pl\libs\itext7\*;. com.thinking.machines.hr.pl.Main
