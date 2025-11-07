@@ -1,4 +1,7 @@
-#Data Layer
+#File Data Layer
+hr/dl/testcases/*.class
+hr/dl/classes/
+#SQL Data Layer
 hr/dbdl/.gradle
 hr/dbdl/bin/
 hr/dbdl/build/
@@ -6,10 +9,12 @@ hr/dbdl/build/
 hr/bl/.gradle
 hr/bl/bin/
 hr/bl/build/
+hr/bl/testcases/*.class
 #Presentation Layer
 hr/pl/.gradle
 hr/pl/bin/
 hr/pl/build/
+hr/pl/pdfs/
 hr/pl/toStartApplication.txt
 #following is the file in which course data is saved
 hr/pl/course.data
@@ -17,5 +22,7 @@ hr/pl/course.data
 hr/pl/course.tmp
 #following is the backup of course.data
 hr/pl/course_back.data
+#pdfs folder is for testing purposes
+
 
 
