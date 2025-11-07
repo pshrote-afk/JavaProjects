@@ -1,3 +1,6 @@
+#Common
+hr/common/classes/*
+!hr/common/classes/.gitkeep
 #File Data Layer
 hr/dl/testcases/*.class
 hr/dl/classes/*
