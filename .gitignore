@@ -1,6 +1,7 @@
 #File Data Layer
 hr/dl/testcases/*.class
-hr/dl/classes/
+hr/dl/classes/*
+!hr/dl/classes/.gitkeep
 #SQL Data Layer
 hr/dbdl/.gradle
 hr/dbdl/bin/
