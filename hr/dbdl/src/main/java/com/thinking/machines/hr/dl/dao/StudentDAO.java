@@ -7,743 +7,597 @@ import com.thinking.machines.hr.dl.interfaces.dao.*;
 import com.thinking.machines.hr.dl.interfaces.dto.*;
 import java.io.*; // for RandomAccessFile class
 import java.math.*; // for BigDecimal class
+import java.sql.*;
 import java.text.*; // for SimpleDateFormat class
 import java.util.*; // for Set collection, and Date class
 
 public class StudentDAO implements StudentDAOInterface {
-  private static final String FILE_NAME = "student.data";
-  private static SimpleDateFormat simpleDateFormat =
-      new SimpleDateFormat("dd/MM/yyyy"); // initialized in a static initializer block
-
   public void add(StudentDTOInterface studentDTO) throws DAOException {
-    /*
-    private String rollNo;//to be generated
-    private String name;
-    private int courseCode;
-    private Date dateOfBirth;
-    private char gender;
-    private boolean isIndian;
-    private BigDecimal fees;
-    private String enrollmentNumber;
-    private String aadharCardNumber;
-    */
-    // extract data from incoming DTO object
-    String name = studentDTO.getName();
-    if (name == null) throw new DAOException("Name is null");
-    name = name.trim();
-    if (name.length() == 0) throw new DAOException("Length of name cannot be zero");
-    int courseCode = studentDTO.getCourseCode();
-    if (!(new CourseDAO().codeExists(courseCode)))
-      throw new DAOException("Invalid course code: " + courseCode);
-    Date dateOfBirth = studentDTO.getDateOfBirth();
-    if (dateOfBirth == null) throw new DAOException("Date of birth is null");
-    char gender = studentDTO.getGender();
-    if (gender == ' ') throw new DAOException("Invalid gender. Only M/F allowed");
-    boolean isIndian = studentDTO.getIsIndian();
-    BigDecimal fees = studentDTO.getFees();
-    if (fees == null) throw new DAOException("Fess is null");
     String enrollmentNumber = studentDTO.getEnrollmentNumber();
-    if (enrollmentNumber == null) throw new DAOException("Enrollment number is null");
     String aadharCardNumber = studentDTO.getAadharCardNumber();
-    if (aadharCardNumber == null) throw new DAOException("Aadhar card number is null");
-    // validated all fields. Now add to file. Then update header.
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      int lastGeneratedCode = 10000000;
-      int recordCount = 0;
-      if (randomAccessFile.length() == 0) // means newly opened file. Therefore initialize header
-      {
-        randomAccessFile.writeBytes(String.format("%-10d", lastGeneratedCode) + "\n");
-        randomAccessFile.writeBytes(String.format("%-10d", recordCount) + "\n");
-      } else // else file already exists, so read header
-      {
-        lastGeneratedCode = Integer.parseInt(randomAccessFile.readLine().trim());
-        recordCount = Integer.parseInt(randomAccessFile.readLine().trim());
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT roll_no FROM student WHERE enrollment_number=?");
+      preparedStatement.setString(1, enrollmentNumber);
+      ResultSet resultSet = preparedStatement.executeQuery();
+      if (resultSet.next()) {
+        resultSet.close();
+        preparedStatement.close();
+        connection.close();
+        throw new DAOException("Enrollment number: " + enrollmentNumber + " already exists.");
       }
-      // crossed header. Now ensure enrollment number and aadhar card number is unique - else throw
-      // exception
-      int x;
-      String fRollNo;
-      String fEnrollmentNumber;
-      String fAadharCardNumber;
-      boolean enrollmentNumberExists = false;
-      boolean aadharCardNumberExists = false;
-      String enrollmentNumberAgainstRollNo = "";
-      String aadharCardNumberAgainstRollNo = "";
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        fRollNo = randomAccessFile.readLine();
-        for (x = 2; x <= 7; x++) randomAccessFile.readLine();
-        fEnrollmentNumber = randomAccessFile.readLine();
-        fAadharCardNumber = randomAccessFile.readLine();
-        if (enrollmentNumberExists == false
-            && enrollmentNumber.equalsIgnoreCase(fEnrollmentNumber)) {
-          enrollmentNumberExists = true;
-          enrollmentNumberAgainstRollNo = fRollNo;
-        }
-        if (aadharCardNumberExists == false
-            && aadharCardNumber.equalsIgnoreCase(fAadharCardNumber)) {
-          aadharCardNumberExists = true;
-          aadharCardNumberAgainstRollNo = fRollNo;
-        }
-        if (enrollmentNumberExists && aadharCardNumberExists) break;
+      resultSet.close();
+      preparedStatement.close();
+      preparedStatement =
+          connection.prepareStatement("SELECT roll_no FROM student WHERE aadhar_card_number=?");
+      preparedStatement.setString(1, aadharCardNumber);
+      resultSet = preparedStatement.executeQuery();
+      if (resultSet.next()) {
+        resultSet.close();
+        preparedStatement.close();
+        connection.close();
+        throw new DAOException("Aadhar card number: " + aadharCardNumber + " already exists.");
       }
-      if (enrollmentNumberExists && aadharCardNumberExists) {
-        throw new DAOException(
-            "Enrollment number ("
-                + enrollmentNumber
-                + ") and aadhar card number ("
-                + aadharCardNumber
-                + ") already exist against roll no ("
-                + enrollmentNumberAgainstRollNo
-                + ") and ("
-                + aadharCardNumberAgainstRollNo
-                + ") respectively");
-      }
-      if (enrollmentNumberExists) {
-        throw new DAOException(
-            "Enrollment number ("
-                + enrollmentNumber
-                + ") already exists against roll no ("
-                + enrollmentNumberAgainstRollNo
-                + ")");
-      }
-      if (aadharCardNumberExists) {
-        throw new DAOException(
-            "Aadhar card number ("
-                + aadharCardNumber
-                + ") already exists against roll no ("
-                + aadharCardNumberAgainstRollNo
-                + ")");
-      }
-      // control reached here means enrollment and aadhar are unique. thus, write in file.
-      lastGeneratedCode++;
-      recordCount++;
-      String newGeneratedRollNo = "R" + lastGeneratedCode;
-      studentDTO.setRollNo(
-          newGeneratedRollNo); // setting roll no in parameter variable so that from where it was
-                               // called we can display what roll no has been generated
-      randomAccessFile.writeBytes(studentDTO.getRollNo() + "\n");
-      randomAccessFile.writeBytes(name + "\n");
-      randomAccessFile.writeBytes(courseCode + "\n");
-      randomAccessFile.writeBytes(simpleDateFormat.format(dateOfBirth) + "\n");
-      randomAccessFile.writeBytes(gender + "\n");
-      randomAccessFile.writeBytes(isIndian + "\n");
-      randomAccessFile.writeBytes(fees.toPlainString() + "\n");
-      randomAccessFile.writeBytes(enrollmentNumber + "\n");
-      randomAccessFile.writeBytes(aadharCardNumber + "\n");
-      // update header
-      randomAccessFile.seek(0);
-      randomAccessFile.writeBytes(String.format("%-10d", lastGeneratedCode) + "\n");
-      randomAccessFile.writeBytes(String.format("%-10d", recordCount) + "\n");
-      randomAccessFile.close();
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      resultSet.close();
+      preparedStatement.close();
+      String name = studentDTO.getName();
+      int courseCode = studentDTO.getCourseCode();
+      java.util.Date dateOfBirth = studentDTO.getDateOfBirth();
+      char gender = studentDTO.getGender();
+      boolean isIndian = studentDTO.getIsIndian();
+      BigDecimal fees = studentDTO.getFees();
+
+      preparedStatement =
+          connection.prepareStatement(
+              "INSERT INTO student"
+                  + " (name,course_code,date_of_birth,gender,is_indian,fees,enrollment_number,aadhar_card_number)"
+                  + " VALUES (?,?,?,?,?,?,?,?)",
+              Statement.RETURN_GENERATED_KEYS);
+      preparedStatement.setString(1, name);
+      preparedStatement.setInt(2, courseCode);
+      java.sql.Date sqlDateOfBirth = new java.sql.Date(dateOfBirth.getTime());
+      preparedStatement.setDate(
+          3, sqlDateOfBirth); // won't accept java.util.Date. It wants java.sql.Date.
+      preparedStatement.setString(4, String.valueOf(gender));
+      preparedStatement.setBoolean(5, isIndian);
+      preparedStatement.setBigDecimal(6, fees);
+      preparedStatement.setString(7, enrollmentNumber);
+      preparedStatement.setString(8, aadharCardNumber);
+      preparedStatement.executeUpdate();
+      resultSet = preparedStatement.getGeneratedKeys();
+      resultSet.next();
+      int rollNo = resultSet.getInt(1);
+      studentDTO.setRollNo("A" + rollNo);
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+    } catch (SQLException sqlException) {
+      throw new DAOException(sqlException.getMessage());
     }
   }
 
   public void update(StudentDTOInterface studentDTO) throws DAOException {
-    // extract data from incoming DTO object
-    String rollNo = studentDTO.getRollNo();
-    String name = studentDTO.getName();
-    if (name == null) throw new DAOException("Name is null");
-    name = name.trim();
-    if (name.length() == 0) throw new DAOException("Length of name cannot be zero");
-    int courseCode = studentDTO.getCourseCode();
-    if (!(new CourseDAO().codeExists(courseCode)))
-      throw new DAOException("Invalid course code: " + courseCode);
-    Date dateOfBirth = studentDTO.getDateOfBirth();
-    if (dateOfBirth == null) throw new DAOException("Date of birth is null");
-    char gender = studentDTO.getGender();
-    if (gender == ' ') throw new DAOException("Invalid gender. Only M/F allowed");
-    boolean isIndian = studentDTO.getIsIndian();
-    BigDecimal fees = studentDTO.getFees();
-    if (fees == null) throw new DAOException("Fess is null");
+    String rollNoString = studentDTO.getRollNo();
+    if (rollNoString.charAt(0) == 'A' || rollNoString.charAt(0) == 'a')
+      rollNoString = rollNoString.substring(1);
+    int rollNo = Integer.parseInt(rollNoString);
     String enrollmentNumber = studentDTO.getEnrollmentNumber();
-    if (enrollmentNumber == null) throw new DAOException("Enrollment number is null");
     String aadharCardNumber = studentDTO.getAadharCardNumber();
-    if (aadharCardNumber == null) throw new DAOException("Aadhar card number is null");
-    // validated all fields. Now check duplicacy of roll, enroll and aadhar in file.
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      boolean rollNoFound = false;
-      boolean enrollmentNumberFound = false;
-      boolean aadharCardNumberFound = false;
-      String enrollmentNumberFoundAgainstRollNo = "";
-      String aadharCardNumberFoundAgainstRollNo = "";
-      String fRollNo;
-      String fEnrollmentNumber;
-      String fAadharCardNumber;
-      int x;
-      long foundAt = 0;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        if (rollNoFound == false) {
-          foundAt = randomAccessFile.getFilePointer();
-        }
-        fRollNo = randomAccessFile.readLine();
-        for (x = 0; x <= 5; x++) randomAccessFile.readLine();
-        fEnrollmentNumber = randomAccessFile.readLine();
-        fAadharCardNumber = randomAccessFile.readLine();
-        if (rollNoFound == false && fRollNo.equalsIgnoreCase(rollNo)) {
-          rollNoFound = true;
-        }
-        if (enrollmentNumberFound == false
-            && fEnrollmentNumber.equalsIgnoreCase(enrollmentNumber)) {
-          enrollmentNumberFound = true;
-          enrollmentNumberFoundAgainstRollNo = fRollNo;
-        }
-        if (aadharCardNumberFound == false
-            && fAadharCardNumber.equalsIgnoreCase(aadharCardNumber)) {
-          aadharCardNumberFound = true;
-          aadharCardNumberFoundAgainstRollNo = fRollNo;
-        }
-        if (rollNoFound && enrollmentNumberFound && aadharCardNumberFound) break;
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement(
+              "SELECT roll_no FROM student WHERE enrollment_number=? AND roll_no!=?");
+      preparedStatement.setString(1, enrollmentNumber);
+      preparedStatement.setInt(2, rollNo);
+      ResultSet resultSet = preparedStatement.executeQuery();
+      if (resultSet.next()) {
+        resultSet.close();
+        preparedStatement.close();
+        connection.close();
+        throw new DAOException("Enrollment number: " + enrollmentNumber + " already exists.");
       }
-      if (rollNoFound == false) {
-        throw new DAOException("Invalid roll no: " + rollNo);
+      resultSet.close();
+      preparedStatement.close();
+      preparedStatement =
+          connection.prepareStatement(
+              "SELECT roll_no FROM student WHERE aadhar_card_number=? AND roll_no!=?");
+      preparedStatement.setString(1, aadharCardNumber);
+      preparedStatement.setInt(2, rollNo);
+      resultSet = preparedStatement.executeQuery();
+      if (resultSet.next()) {
+        resultSet.close();
+        preparedStatement.close();
+        connection.close();
+        throw new DAOException("Aadhar card number: " + aadharCardNumber + " already exists.");
       }
-      boolean enrollmentNumberExists = false;
-      if (enrollmentNumberFound
-          && enrollmentNumberFoundAgainstRollNo.equalsIgnoreCase(rollNo) == false) {
-        enrollmentNumberExists = true;
-      }
-      boolean aadharCardNumberExists = false;
-      if (aadharCardNumberFound
-          && aadharCardNumberFoundAgainstRollNo.equalsIgnoreCase(rollNo) == false) {
-        aadharCardNumberExists = true;
-      }
-      if (enrollmentNumberExists && aadharCardNumberExists) {
-        throw new DAOException(
-            "Enrollment number ("
-                + enrollmentNumber
-                + ") and aadhar card number ("
-                + aadharCardNumber
-                + ") already exist against roll no ("
-                + enrollmentNumberFoundAgainstRollNo
-                + ") and ("
-                + aadharCardNumberFoundAgainstRollNo
-                + ") respectively");
-      }
-      if (enrollmentNumberExists) {
-        throw new DAOException(
-            "Enrollment number ("
-                + enrollmentNumber
-                + ") already exists against roll no ("
-                + enrollmentNumberFoundAgainstRollNo
-                + ")");
-      }
-      if (aadharCardNumberExists) {
-        throw new DAOException(
-            "Aadhar card number ("
-                + aadharCardNumber
-                + ") already exists against roll no ("
-                + aadharCardNumberFoundAgainstRollNo
-                + ")");
-      }
-      File tmpFile = new File("student.tmp");
-      RandomAccessFile tmpRandomAccessFile;
-      tmpRandomAccessFile = new RandomAccessFile(tmpFile, "rw");
-      randomAccessFile.seek(foundAt);
-      for (x = 0; x <= 8; x++) randomAccessFile.readLine();
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        tmpRandomAccessFile.writeBytes(randomAccessFile.readLine() + "\n");
-      }
-      // update
-      randomAccessFile.seek(foundAt);
-      randomAccessFile.writeBytes(rollNo + "\n");
-      randomAccessFile.writeBytes(name + "\n");
-      randomAccessFile.writeBytes(courseCode + "\n");
-      randomAccessFile.writeBytes(simpleDateFormat.format(dateOfBirth) + "\n");
-      randomAccessFile.writeBytes(gender + "\n");
-      randomAccessFile.writeBytes(isIndian + "\n");
-      randomAccessFile.writeBytes(fees.toPlainString() + "\n");
-      randomAccessFile.writeBytes(enrollmentNumber + "\n");
-      randomAccessFile.writeBytes(aadharCardNumber + "\n");
-      tmpRandomAccessFile.seek(0);
-      while (tmpRandomAccessFile.getFilePointer() < tmpRandomAccessFile.length()) {
-        randomAccessFile.writeBytes(tmpRandomAccessFile.readLine() + "\n");
-      }
-      randomAccessFile.setLength(randomAccessFile.getFilePointer());
-      tmpRandomAccessFile.setLength(0);
-      tmpRandomAccessFile.close();
-      randomAccessFile.close();
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      resultSet.close();
+      preparedStatement.close();
+      String name = studentDTO.getName();
+      int courseCode = studentDTO.getCourseCode();
+      java.util.Date dateOfBirth = studentDTO.getDateOfBirth();
+      char gender = studentDTO.getGender();
+      boolean isIndian = studentDTO.getIsIndian();
+      BigDecimal fees = studentDTO.getFees();
+
+      preparedStatement =
+          connection.prepareStatement(
+              "UPDATE student SET"
+                  + " name=?,course_code=?,date_of_birth=?,gender=?,is_indian=?,fees=?,enrollment_number=?,aadhar_card_number=?"
+                  + " WHERE roll_no=?");
+      preparedStatement.setString(1, name);
+      preparedStatement.setInt(2, courseCode);
+      java.sql.Date sqlDateOfBirth = new java.sql.Date(dateOfBirth.getTime());
+      preparedStatement.setDate(3, sqlDateOfBirth);
+      preparedStatement.setString(4, String.valueOf(gender));
+      preparedStatement.setBoolean(5, isIndian);
+      preparedStatement.setBigDecimal(6, fees);
+      preparedStatement.setString(7, enrollmentNumber);
+      preparedStatement.setString(8, aadharCardNumber);
+      preparedStatement.setInt(9, rollNo);
+
+      preparedStatement.executeUpdate();
+      preparedStatement.close();
+      connection.close();
+    } catch (Exception exception) {
+      throw new DAOException(exception.getMessage());
     }
   }
 
   public void delete(String rollNo) throws DAOException {
-    if (rollNo == null) throw new DAOException("Roll no is null");
-    rollNo = rollNo.trim();
-    if (rollNo.length() == 0) throw new DAOException("Length of roll no cannot be zero");
-    // Now check duplicacy of roll, enroll and aadhar in file.
+    String rollNoString = rollNo;
+    if (rollNoString.charAt(0) == 'A' || rollNoString.charAt(0) == 'a')
+      rollNoString = rollNoString.substring(1);
+    int intRollNo = Integer.parseInt(rollNoString);
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      boolean rollNoFound = false;
-      String fRollNo;
-      int x;
-      long foundAt = 0;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        if (rollNoFound == false) {
-          foundAt = randomAccessFile.getFilePointer();
-        }
-        fRollNo = randomAccessFile.readLine();
-        for (x = 0; x <= 7; x++) randomAccessFile.readLine();
-        if (fRollNo.equalsIgnoreCase(rollNo)) {
-          rollNoFound = true;
-        }
-        if (rollNoFound) break;
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT roll_no FROM student WHERE roll_no=?");
+      preparedStatement.setInt(1, intRollNo);
+      ResultSet resultSet = preparedStatement.executeQuery();
+      if (resultSet.next() == false) {
+        resultSet.close();
+        preparedStatement.close();
+        connection.close();
+        throw new DAOException("Invalid roll no " + rollNo);
       }
-      if (rollNoFound == false) {
-        throw new DAOException("Invalid roll no: " + rollNo);
-      }
-      File tmpFile = new File("student.tmp");
-      RandomAccessFile tmpRandomAccessFile;
-      tmpRandomAccessFile = new RandomAccessFile(tmpFile, "rw");
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        tmpRandomAccessFile.writeBytes(randomAccessFile.readLine() + "\n");
-      }
-      // delete
-      randomAccessFile.seek(foundAt);
-      tmpRandomAccessFile.seek(0);
-      while (tmpRandomAccessFile.getFilePointer() < tmpRandomAccessFile.length()) {
-        randomAccessFile.writeBytes(tmpRandomAccessFile.readLine() + "\n");
-      }
-      randomAccessFile.setLength(randomAccessFile.getFilePointer());
-      // update header
-      String recordCountString;
-      randomAccessFile.seek(0);
-      randomAccessFile.readLine();
-      foundAt = randomAccessFile.getFilePointer();
-      recordCountString = randomAccessFile.readLine().trim();
-      int recordCount = Integer.parseInt(recordCountString);
-      recordCount--;
-      randomAccessFile.seek(foundAt);
-      randomAccessFile.writeBytes(String.format("%-10d", recordCount) + "\n");
-      tmpRandomAccessFile.setLength(0);
-      tmpRandomAccessFile.close();
-      randomAccessFile.close();
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      resultSet.close();
+      preparedStatement.close();
+      preparedStatement = connection.prepareStatement("DELETE FROM student WHERE roll_no=?");
+      preparedStatement.setInt(1, intRollNo);
+      preparedStatement.executeUpdate();
+      preparedStatement.close();
+      connection.close();
+    } catch (Exception exception) {
+      throw new DAOException(exception.getMessage());
     }
   }
 
   public Set<StudentDTOInterface> getByCourseCode(int code) throws DAOException {
-    Set<StudentDTOInterface> treeSet1 = new TreeSet<>();
+    Set<StudentDTOInterface> students;
+    students = new TreeSet<>(); // because we want to maintain order of insertion
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      StudentDTOInterface studentDTO;
-      String fRollNo;
-      String fName;
-      int fCourseCode;
-      char fGender;
-      int x;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        fRollNo = randomAccessFile.readLine();
-        fName = randomAccessFile.readLine();
-        fCourseCode = Integer.parseInt(randomAccessFile.readLine());
-        if (code == fCourseCode) {
-          studentDTO = new StudentDTO();
-          studentDTO.setRollNo(fRollNo);
-          studentDTO.setName(fName);
-          studentDTO.setCourseCode(fCourseCode);
-          try {
-            studentDTO.setDateOfBirth(simpleDateFormat.parse(randomAccessFile.readLine()));
-          } catch (ParseException parseException) {
-            throw new DAOException(parseException.getMessage());
-          }
-          fGender = randomAccessFile.readLine().charAt(0);
-          studentDTO.setGender((fGender == 'M') ? GENDER.MALE : GENDER.FEMALE);
-          studentDTO.setIsIndian(Boolean.parseBoolean(randomAccessFile.readLine()));
-          studentDTO.setFees(new BigDecimal(randomAccessFile.readLine()));
-          studentDTO.setEnrollmentNumber(randomAccessFile.readLine());
-          studentDTO.setAadharCardNumber(randomAccessFile.readLine());
-          treeSet1.add(studentDTO);
-        } else {
-          for (x = 0; x <= 5; x++) randomAccessFile.readLine();
-        }
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement(
+              "SELECT"
+                  + " student.roll_no,student.name,student.course_code,course.title,student.date_of_birth,student.gender,student.is_indian,student.fees,student.enrollment_number,student.aadhar_card_number"
+                  + " FROM student INNER JOIN course ON student.course_code=course.code WHERE"
+                  + " student.course_code=? ORDER BY student.roll_no");
+      preparedStatement.setInt(1, code);
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
+
+      int rollNo;
+      String name;
+      int courseCode;
+      String title;
+      java.sql.Date dateOfBirth; // cause we're receiving Date object from an sql database
+      String gender;
+      boolean isIndian;
+      BigDecimal fees;
+      String enrollmentNumber;
+      String aadharCardNumber;
+      StudentDTO studentDTO;
+      while (resultSet.next()) {
+        rollNo = resultSet.getInt("roll_no");
+        name = resultSet.getString("name").trim();
+        courseCode = resultSet.getInt("course_code");
+        title = resultSet.getString("title").trim();
+        dateOfBirth = resultSet.getDate("date_of_birth");
+        gender = resultSet.getString("gender");
+        isIndian = resultSet.getBoolean("is_indian");
+        fees = resultSet.getBigDecimal("fees");
+        enrollmentNumber = resultSet.getString("enrollment_number").trim();
+        aadharCardNumber = resultSet.getString("aadhar_card_number").trim();
+        studentDTO = new StudentDTO();
+        studentDTO.setRollNo("A" + rollNo);
+        studentDTO.setName(name);
+        studentDTO.setCourseCode(courseCode);
+        studentDTO.setTitle(title);
+        studentDTO.setDateOfBirth(dateOfBirth);
+        studentDTO.setGender(gender.charAt(0) == 'M' ? GENDER.MALE : GENDER.FEMALE);
+        studentDTO.setIsIndian(isIndian);
+        studentDTO.setFees(fees);
+        studentDTO.setEnrollmentNumber(enrollmentNumber);
+        studentDTO.setAadharCardNumber(aadharCardNumber);
+        students.add(studentDTO);
       }
-      randomAccessFile.close();
-      return treeSet1;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return students;
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
     }
   }
 
   public Set<StudentDTOInterface> getAll() throws DAOException {
-    Set<StudentDTOInterface> treeSet1 = new TreeSet<>();
+    Set<StudentDTOInterface> students;
+    students = new TreeSet<>(); // because we want to maintain order of insertion
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      StudentDTOInterface studentDTO;
-      char fGender;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        studentDTO = new StudentDTO();
-        studentDTO.setRollNo(randomAccessFile.readLine());
-        studentDTO.setName(randomAccessFile.readLine());
-        studentDTO.setCourseCode(Integer.parseInt(randomAccessFile.readLine()));
-        try {
-          studentDTO.setDateOfBirth(simpleDateFormat.parse(randomAccessFile.readLine()));
-        } catch (ParseException parseException) {
-          throw new DAOException(parseException.getMessage());
-        }
-        fGender = randomAccessFile.readLine().charAt(0);
-        studentDTO.setGender((fGender == 'M') ? GENDER.MALE : GENDER.FEMALE);
-        studentDTO.setIsIndian(Boolean.parseBoolean(randomAccessFile.readLine()));
-        studentDTO.setFees(new BigDecimal(randomAccessFile.readLine()));
-        studentDTO.setEnrollmentNumber(randomAccessFile.readLine());
-        studentDTO.setAadharCardNumber(randomAccessFile.readLine());
-        treeSet1.add(studentDTO);
-      }
-      randomAccessFile.close();
-      return treeSet1;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
-    }
-  }
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement(
+              "SELECT"
+                  + " student.roll_no,student.name,student.course_code,course.title,student.date_of_birth,student.gender,student.is_indian,student.fees,student.enrollment_number,student.aadhar_card_number"
+                  + " FROM student INNER JOIN course ON student.course_code=course.code ORDER BY"
+                  + " student.roll_no");
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
 
-  public boolean isCourseAllotted(int code) throws DAOException {
-    if (code <= 0) return false;
-    try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      boolean courseFound = false;
-      int fCode;
-      int x;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        randomAccessFile.readLine();
-        randomAccessFile.readLine();
-        fCode = Integer.parseInt(randomAccessFile.readLine());
-        if (fCode == code) {
-          courseFound = true;
-          break;
-        }
-        randomAccessFile.readLine();
-        randomAccessFile.readLine();
-        randomAccessFile.readLine();
-        randomAccessFile.readLine();
-        randomAccessFile.readLine();
-        randomAccessFile.readLine();
+      int rollNo;
+      String name;
+      int courseCode;
+      String title;
+      java.sql.Date dateOfBirth; // cause we're receiving Date object from an sql database
+      String gender;
+      boolean isIndian;
+      BigDecimal fees;
+      String enrollmentNumber;
+      String aadharCardNumber;
+      StudentDTO studentDTO;
+      while (resultSet.next()) {
+        rollNo = resultSet.getInt("roll_no");
+        name = resultSet.getString("name").trim();
+        courseCode = resultSet.getInt("course_code");
+        title = resultSet.getString("title").trim();
+        dateOfBirth = resultSet.getDate("date_of_birth");
+        gender = resultSet.getString("gender");
+        isIndian = resultSet.getBoolean("is_indian");
+        fees = resultSet.getBigDecimal("fees");
+        enrollmentNumber = resultSet.getString("enrollment_number").trim();
+        aadharCardNumber = resultSet.getString("aadhar_card_number").trim();
+        studentDTO = new StudentDTO();
+        studentDTO.setRollNo("A" + rollNo);
+        studentDTO.setName(name);
+        studentDTO.setCourseCode(courseCode);
+        studentDTO.setTitle(title);
+        studentDTO.setDateOfBirth(dateOfBirth);
+        studentDTO.setGender(gender.charAt(0) == 'M' ? GENDER.MALE : GENDER.FEMALE);
+        studentDTO.setIsIndian(isIndian);
+        studentDTO.setFees(fees);
+        studentDTO.setEnrollmentNumber(enrollmentNumber);
+        studentDTO.setAadharCardNumber(aadharCardNumber);
+        students.add(studentDTO);
       }
-      return courseFound;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return students;
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
     }
   }
 
   public StudentDTOInterface getByRollNo(String rollNo) throws DAOException {
-    if (rollNo == null) throw new DAOException("Roll no is null");
-    rollNo = rollNo.trim();
-    if (rollNo.length() == 0) throw new DAOException("Length of roll no cannot be zero");
+    if (rollNo.charAt(0) == 'A' || rollNo.charAt(0) == 'a') rollNo = rollNo.substring(1);
+    int intRollNo = Integer.parseInt(rollNo);
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      String fRollNo;
-      String fName;
-      int fCourseCode;
-      Date fDateOfBirth;
-      char fGender;
-      boolean fIsIndian;
-      BigDecimal fFees;
-      String fEnrollmentNumber;
-      String fAadharCardNumber;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        fRollNo = randomAccessFile.readLine();
-        if (fRollNo.equalsIgnoreCase(rollNo)) {
-          fName = randomAccessFile.readLine();
-          fCourseCode = Integer.parseInt(randomAccessFile.readLine());
-          try {
-            fDateOfBirth = simpleDateFormat.parse(randomAccessFile.readLine());
-          } catch (ParseException parseException) {
-            throw new DAOException(parseException.getMessage());
-          }
-          fGender = randomAccessFile.readLine().charAt(0);
-          fIsIndian = Boolean.parseBoolean(randomAccessFile.readLine());
-          fFees = new BigDecimal(randomAccessFile.readLine());
-          fEnrollmentNumber = randomAccessFile.readLine();
-          fAadharCardNumber = randomAccessFile.readLine();
-          StudentDTOInterface studentDTO = new StudentDTO();
-          studentDTO.setRollNo(fRollNo);
-          studentDTO.setName(fName);
-          studentDTO.setCourseCode(fCourseCode);
-          studentDTO.setDateOfBirth(fDateOfBirth);
-          studentDTO.setGender((fGender == 'M') ? GENDER.MALE : GENDER.FEMALE);
-          studentDTO.setIsIndian(fIsIndian);
-          studentDTO.setFees(fFees);
-          studentDTO.setEnrollmentNumber(fEnrollmentNumber);
-          studentDTO.setAadharCardNumber(fAadharCardNumber);
-          return studentDTO;
-        }
-        for (int x = 0; x < 8; x++) {
-          randomAccessFile.readLine();
-        }
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement(
+              "SELECT"
+                  + " student.roll_no,student.name,student.course_code,course.title,student.date_of_birth,student.gender,student.is_indian,student.fees,student.enrollment_number,student.aadhar_card_number"
+                  + " FROM student INNER JOIN course ON student.course_code=course.code WHERE"
+                  + " student.roll_no=?");
+      preparedStatement.setInt(1, intRollNo);
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
+      if (resultSet.next() == false) {
+        resultSet.close();
+        preparedStatement.close();
+        connection.close();
+        throw new DAOException("Invalid roll no " + rollNo);
       }
-      randomAccessFile.close();
-      throw new DAOException("Invalid roll no: " + rollNo);
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+
+      String name;
+      int courseCode;
+      String title;
+      java.sql.Date dateOfBirth; // cause we're receiving Date object from an sql database
+      String gender;
+      boolean isIndian;
+      BigDecimal fees;
+      String enrollmentNumber;
+      String aadharCardNumber;
+      StudentDTO studentDTO;
+
+      intRollNo = resultSet.getInt("roll_no");
+      name = resultSet.getString("name").trim();
+      courseCode = resultSet.getInt("course_code");
+      title = resultSet.getString("title").trim();
+      dateOfBirth = resultSet.getDate("date_of_birth");
+      gender = resultSet.getString("gender");
+      isIndian = resultSet.getBoolean("is_indian");
+      fees = resultSet.getBigDecimal("fees");
+      enrollmentNumber = resultSet.getString("enrollment_number").trim();
+      aadharCardNumber = resultSet.getString("aadhar_card_number").trim();
+      studentDTO = new StudentDTO();
+      studentDTO.setRollNo("A" + intRollNo);
+      studentDTO.setName(name);
+      studentDTO.setCourseCode(courseCode);
+      studentDTO.setTitle(title);
+      studentDTO.setDateOfBirth(dateOfBirth);
+      studentDTO.setGender(gender.charAt(0) == 'M' ? GENDER.MALE : GENDER.FEMALE);
+      studentDTO.setIsIndian(isIndian);
+      studentDTO.setFees(fees);
+      studentDTO.setEnrollmentNumber(enrollmentNumber);
+      studentDTO.setAadharCardNumber(aadharCardNumber);
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return studentDTO;
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
     }
   }
 
   public StudentDTOInterface getByEnrollmentNumber(String enrollmentNumber) throws DAOException {
-    if (enrollmentNumber == null) throw new DAOException("Enrollment number is null");
-    enrollmentNumber = enrollmentNumber.trim();
-    if (enrollmentNumber.length() == 0)
-      throw new DAOException("Length of enrollment number cannot be zero");
+
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      String fRollNo;
-      String fName;
-      int fCourseCode;
-      Date fDateOfBirth;
-      char fGender;
-      boolean fIsIndian;
-      BigDecimal fFees;
-      String fEnrollmentNumber;
-      String fAadharCardNumber;
-      long foundAt = 0;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        foundAt = randomAccessFile.getFilePointer();
-        for (int x = 0; x < 7; x++) randomAccessFile.readLine();
-        fEnrollmentNumber = randomAccessFile.readLine();
-        randomAccessFile.readLine(); // aadharCard
-        if (fEnrollmentNumber.equalsIgnoreCase(enrollmentNumber)) {
-          randomAccessFile.seek(foundAt);
-          fRollNo = randomAccessFile.readLine();
-          fName = randomAccessFile.readLine();
-          fCourseCode = Integer.parseInt(randomAccessFile.readLine());
-          try {
-            fDateOfBirth = simpleDateFormat.parse(randomAccessFile.readLine());
-          } catch (ParseException parseException) {
-            throw new DAOException(parseException.getMessage());
-          }
-          fGender = randomAccessFile.readLine().charAt(0);
-          fIsIndian = Boolean.parseBoolean(randomAccessFile.readLine());
-          fFees = new BigDecimal(randomAccessFile.readLine());
-          fEnrollmentNumber = randomAccessFile.readLine(); // re-reading just for clarity
-          fAadharCardNumber = randomAccessFile.readLine();
-          StudentDTOInterface studentDTO = new StudentDTO();
-          studentDTO.setRollNo(fRollNo);
-          studentDTO.setName(fName);
-          studentDTO.setCourseCode(fCourseCode);
-          studentDTO.setDateOfBirth(fDateOfBirth);
-          studentDTO.setGender((fGender == 'M') ? GENDER.MALE : GENDER.FEMALE);
-          studentDTO.setIsIndian(fIsIndian);
-          studentDTO.setFees(fFees);
-          studentDTO.setEnrollmentNumber(fEnrollmentNumber);
-          studentDTO.setAadharCardNumber(fAadharCardNumber);
-          return studentDTO;
-        }
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement(
+              "SELECT"
+                  + " student.roll_no,student.name,student.course_code,course.title,student.date_of_birth,student.gender,student.is_indian,student.fees,student.enrollment_number,student.aadhar_card_number"
+                  + " FROM student INNER JOIN course ON student.course_code=course.code WHERE"
+                  + " student.enrollment_number=?");
+      preparedStatement.setString(1, enrollmentNumber);
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
+      if (resultSet.next() == false) {
+        resultSet.close();
+        preparedStatement.close();
+        connection.close();
+        throw new DAOException("Invalid enrollment number " + enrollmentNumber);
       }
-      randomAccessFile.close();
-      throw new DAOException("Invalid enrollment number: " + enrollmentNumber);
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+
+      int rollNo;
+      String name;
+      int courseCode;
+      String title;
+      java.sql.Date dateOfBirth; // cause we're receiving Date object from an sql database
+      String gender;
+      boolean isIndian;
+      BigDecimal fees;
+      // String enrollmentNumber;
+      String aadharCardNumber;
+      StudentDTO studentDTO;
+
+      rollNo = resultSet.getInt("roll_no");
+      name = resultSet.getString("name").trim();
+      courseCode = resultSet.getInt("course_code");
+      title = resultSet.getString("title").trim();
+      dateOfBirth = resultSet.getDate("date_of_birth");
+      gender = resultSet.getString("gender");
+      isIndian = resultSet.getBoolean("is_indian");
+      fees = resultSet.getBigDecimal("fees");
+      enrollmentNumber = resultSet.getString("enrollment_number").trim();
+      aadharCardNumber = resultSet.getString("aadhar_card_number").trim();
+      studentDTO = new StudentDTO();
+      studentDTO.setRollNo("A" + rollNo);
+      studentDTO.setName(name);
+      studentDTO.setCourseCode(courseCode);
+      studentDTO.setTitle(title);
+      studentDTO.setDateOfBirth(dateOfBirth);
+      studentDTO.setGender(gender.charAt(0) == 'M' ? GENDER.MALE : GENDER.FEMALE);
+      studentDTO.setIsIndian(isIndian);
+      studentDTO.setFees(fees);
+      studentDTO.setEnrollmentNumber(enrollmentNumber);
+      studentDTO.setAadharCardNumber(aadharCardNumber);
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return studentDTO;
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
     }
   }
 
   public StudentDTOInterface getByAadharCardNumber(String aadharCardNumber) throws DAOException {
-    if (aadharCardNumber == null) throw new DAOException("Aadhar card number is null");
-    aadharCardNumber = aadharCardNumber.trim();
-    if (aadharCardNumber.length() == 0)
-      throw new DAOException("Length of aadhar card number cannot be zero");
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      String fRollNo;
-      String fName;
-      int fCourseCode;
-      Date fDateOfBirth;
-      char fGender;
-      boolean fIsIndian;
-      BigDecimal fFees;
-      String fEnrollmentNumber;
-      String fAadharCardNumber;
-      long foundAt = 0;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        foundAt = randomAccessFile.getFilePointer();
-        for (int x = 0; x < 8; x++) randomAccessFile.readLine();
-        fAadharCardNumber = randomAccessFile.readLine();
-        if (fAadharCardNumber.equalsIgnoreCase(aadharCardNumber)) {
-          randomAccessFile.seek(foundAt);
-          fRollNo = randomAccessFile.readLine();
-          fName = randomAccessFile.readLine();
-          fCourseCode = Integer.parseInt(randomAccessFile.readLine());
-          try {
-            fDateOfBirth = simpleDateFormat.parse(randomAccessFile.readLine());
-          } catch (ParseException parseException) {
-            throw new DAOException(parseException.getMessage());
-          }
-          fGender = randomAccessFile.readLine().charAt(0);
-          fIsIndian = Boolean.parseBoolean(randomAccessFile.readLine());
-          fFees = new BigDecimal(randomAccessFile.readLine());
-          fEnrollmentNumber = randomAccessFile.readLine();
-          fAadharCardNumber = randomAccessFile.readLine(); // re-reading just for clarity
-          StudentDTOInterface studentDTO = new StudentDTO();
-          studentDTO.setRollNo(fRollNo);
-          studentDTO.setName(fName);
-          studentDTO.setCourseCode(fCourseCode);
-          studentDTO.setDateOfBirth(fDateOfBirth);
-          studentDTO.setGender((fGender == 'M') ? GENDER.MALE : GENDER.FEMALE);
-          studentDTO.setIsIndian(fIsIndian);
-          studentDTO.setFees(fFees);
-          studentDTO.setEnrollmentNumber(fEnrollmentNumber);
-          studentDTO.setAadharCardNumber(fAadharCardNumber);
-          return studentDTO;
-        }
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement(
+              "SELECT"
+                  + " student.roll_no,student.name,student.course_code,course.title,student.date_of_birth,student.gender,student.is_indian,student.fees,student.enrollment_number,student.aadhar_card_number"
+                  + " FROM student INNER JOIN course ON student.course_code=course.code WHERE"
+                  + " student.aadhar_card_number=?");
+      preparedStatement.setString(1, aadharCardNumber);
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
+      if (resultSet.next() == false) {
+        resultSet.close();
+        preparedStatement.close();
+        connection.close();
+        throw new DAOException("Invalid enrollment number " + aadharCardNumber);
       }
-      randomAccessFile.close();
-      throw new DAOException("Invalid aadhar card number: " + aadharCardNumber);
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+
+      int rollNo;
+      String name;
+      int courseCode;
+      String title;
+      java.sql.Date dateOfBirth; // cause we're receiving Date object from an sql database
+      String gender;
+      boolean isIndian;
+      BigDecimal fees;
+      String enrollmentNumber;
+      // String aadharCardNumber;
+      StudentDTO studentDTO;
+
+      rollNo = resultSet.getInt("roll_no");
+      name = resultSet.getString("name").trim();
+      courseCode = resultSet.getInt("course_code");
+      title = resultSet.getString("title").trim();
+      dateOfBirth = resultSet.getDate("date_of_birth");
+      gender = resultSet.getString("gender");
+      isIndian = resultSet.getBoolean("is_indian");
+      fees = resultSet.getBigDecimal("fees");
+      enrollmentNumber = resultSet.getString("enrollment_number").trim();
+      aadharCardNumber = resultSet.getString("aadhar_card_number").trim();
+      studentDTO = new StudentDTO();
+      studentDTO.setRollNo("A" + rollNo);
+      studentDTO.setName(name);
+      studentDTO.setCourseCode(courseCode);
+      studentDTO.setTitle(title);
+      studentDTO.setDateOfBirth(dateOfBirth);
+      studentDTO.setGender(gender.charAt(0) == 'M' ? GENDER.MALE : GENDER.FEMALE);
+      studentDTO.setIsIndian(isIndian);
+      studentDTO.setFees(fees);
+      studentDTO.setEnrollmentNumber(enrollmentNumber);
+      studentDTO.setAadharCardNumber(aadharCardNumber);
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return studentDTO;
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
+    }
+  }
+
+  public boolean isCourseAllotted(int code) throws DAOException {
+    try {
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT course_code FROM student WHERE course_code=?");
+      preparedStatement.setInt(1, code);
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
+
+      boolean isCourseAllotted = resultSet.next();
+
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return isCourseAllotted;
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
     }
   }
 
   public boolean rollNoExists(String rollNo) throws DAOException {
-    if (rollNo == null) return false;
-    rollNo = rollNo.trim();
-    if (rollNo.length() == 0) return false;
+    if (rollNo.charAt(0) == 'A' || rollNo.charAt(0) == 'a') rollNo = rollNo.substring(1);
+    int intRollNo = Integer.parseInt(rollNo);
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      String fRollNo;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        fRollNo = randomAccessFile.readLine();
-        if (fRollNo.equalsIgnoreCase(rollNo)) {
-          return true;
-        }
-        for (int x = 0; x < 8; x++) randomAccessFile.readLine();
-      }
-      randomAccessFile.close();
-      return false;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT roll_no FROM student WHERE roll_no=?");
+      preparedStatement.setInt(1, intRollNo);
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
+
+      boolean rollNoExists = resultSet.next();
+
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return rollNoExists;
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
     }
   }
 
   public boolean enrollmentNumberExists(String enrollmentNumber) throws DAOException {
-    if (enrollmentNumber == null) return false;
-    enrollmentNumber = enrollmentNumber.trim();
-    if (enrollmentNumber.length() == 0) return false;
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      String fEnrollmentNumber;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        for (int x = 0; x < 7; x++) randomAccessFile.readLine();
-        fEnrollmentNumber = randomAccessFile.readLine();
-        randomAccessFile.readLine(); // aadharCard
-        if (fEnrollmentNumber.equalsIgnoreCase(enrollmentNumber)) {
-          return true;
-        }
-      }
-      randomAccessFile.close();
-      return false;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement(
+              "SELECT enrollment_number FROM student WHERE enrollment_number=?");
+      preparedStatement.setString(1, enrollmentNumber);
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
+
+      boolean enrollmentNumberExists = resultSet.next();
+
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return enrollmentNumberExists;
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
     }
   }
 
   public boolean aadharCardNumberExists(String aadharCardNumber) throws DAOException {
-    if (aadharCardNumber == null) return false;
-    aadharCardNumber = aadharCardNumber.trim();
-    if (aadharCardNumber.length() == 0) return false;
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      String fAadharCardNumber;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        for (int x = 0; x < 8; x++) randomAccessFile.readLine();
-        fAadharCardNumber = randomAccessFile.readLine();
-        if (fAadharCardNumber.equalsIgnoreCase(aadharCardNumber)) {
-          return true;
-        }
-      }
-      randomAccessFile.close();
-      return false;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement(
+              "SELECT aadhar_card_number FROM student WHERE aadhar_card_number=?");
+      preparedStatement.setString(1, aadharCardNumber);
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
+
+      boolean aadharCardNumberExists = resultSet.next();
+
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return aadharCardNumberExists;
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
     }
   }
 
   public int getCount() throws DAOException {
+    int count = 0;
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      int count = Integer.parseInt(randomAccessFile.readLine().trim());
-      randomAccessFile.close();
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT COUNT(roll_no) FROM student;");
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
+      if (resultSet.next()) {
+        count = resultSet.getInt(1);
+      }
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
       return count;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
     }
   }
 
   public int getCountByCourse(int code) throws DAOException {
-    if (code <= 0) throw new DAOException("Invalid code: " + code);
-    if (!(new CourseDAO().codeExists(code))) throw new DAOException("Invalid code: " + code);
     int count = 0;
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      StudentDTOInterface studentDTO;
-      int fCourseCode;
-      int x;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        randomAccessFile.readLine();
-        randomAccessFile.readLine();
-        fCourseCode = Integer.parseInt(randomAccessFile.readLine());
-        if (code == fCourseCode) {
-          count++;
-        }
-        for (x = 0; x <= 5; x++) randomAccessFile.readLine();
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT COUNT(roll_no) FROM student WHERE course_code=?;");
+      preparedStatement.setInt(1, code);
+      ResultSet resultSet;
+      resultSet = preparedStatement.executeQuery();
+      if (resultSet.next()) {
+        count = resultSet.getInt(1);
       }
-      randomAccessFile.close();
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
       return count;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+    } catch (Exception e) {
+      throw new DAOException(e.getMessage());
     }
   }
 }
