@@ -9,6 +9,7 @@ public class StudentDTO implements StudentDTOInterface {
   private String rollNo;
   private String name;
   private int courseCode;
+  private String title;
   private Date dateOfBirth;
   private char gender;
   private boolean isIndian;
@@ -38,6 +39,14 @@ public class StudentDTO implements StudentDTOInterface {
 
   public int getCourseCode() {
     return this.courseCode;
+  }
+
+  public void setTitle(java.lang.String title) {
+    this.title = title;
+  }
+
+  public java.lang.String getTitle() {
+    return this.title;
   }
 
   public void setDateOfBirth(java.util.Date dateOfBirth) {
@@ -93,6 +102,7 @@ public class StudentDTO implements StudentDTOInterface {
     this.rollNo = null;
     this.name = null;
     this.courseCode = 0;
+    this.title = null;
     this.dateOfBirth = null;
     this.gender = ' ';
     this.isIndian = false;

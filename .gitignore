@@ -9,6 +9,7 @@ hr/dl/classes/*
 hr/dbdl/.gradle
 hr/dbdl/bin/
 hr/dbdl/build/
+hr/dbdl/testcases/*.class
 #Business Layer
 hr/bl/.gradle
 hr/bl/bin/
