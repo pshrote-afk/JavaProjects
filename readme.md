@@ -41,3 +41,11 @@ java -classpath c:\JavaProjects\hr\common\dist\hr-common.jar;
                 c:\JavaProjects\hr\dbdl\libs\*;. 
                 com.thinking.machines.hr.pl.Main
 ```
+
+---
+### Implementation Status
+Note: The presentation layer for the Student entity is not yet implemented
+| Entity   | DL | DBDL | BL | PL |
+|----------|----|----|----|----|
+| Course   | Done | Done | Done | Done  |
+| Student  | Done | Done | Done | **[PENDING]**  |
