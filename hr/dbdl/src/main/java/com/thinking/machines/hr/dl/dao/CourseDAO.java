@@ -19,29 +19,29 @@ public class CourseDAO implements CourseDAOInterface {
     if (title.length() == 0) throw new DAOException("Length of title is zero");
     Connection connection = DAOConnection.getConnection();
     try {
-      PreparedStatement prepareStatement =
-          connection.prepareStatement("SELECT * FROM course WHERE title=?");
-      prepareStatement.setString(1, title);
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT code FROM course WHERE title=?");
+      preparedStatement.setString(1, title);
       ResultSet resultSet;
-      resultSet = prepareStatement.executeQuery();
+      resultSet = preparedStatement.executeQuery();
       if (resultSet.next()) {
         resultSet.close();
-        prepareStatement.close();
+        preparedStatement.close();
         connection.close();
         throw new DAOException("Course title already exists");
       }
       resultSet.close();
-      prepareStatement.close();
-      prepareStatement =
+      preparedStatement.close();
+      preparedStatement =
           connection.prepareStatement(
               "INSERT INTO course (title) VALUES (?)", Statement.RETURN_GENERATED_KEYS);
-      prepareStatement.setString(1, title);
-      prepareStatement.executeUpdate();
-      resultSet = prepareStatement.getGeneratedKeys();
+      preparedStatement.setString(1, title);
+      preparedStatement.executeUpdate();
+      resultSet = preparedStatement.getGeneratedKeys();
       resultSet.next();
       int code = resultSet.getInt(1);
       resultSet.close();
-      prepareStatement.close();
+      preparedStatement.close();
       connection.close();
       courseDTO.setCode(code);
     } catch (SQLException sqlException) {
@@ -50,266 +50,210 @@ public class CourseDAO implements CourseDAOInterface {
   }
 
   public void update(CourseDTOInterface courseDTO) throws DAOException {
-    // validate incoming object
     int code = courseDTO.getCode();
-    if (code <= 0) throw new DAOException("Invalid code: " + code);
     String title = courseDTO.getTitle();
-    if (title == null) throw new DAOException("Title is null");
-    title = title.trim();
-    if (title.length() == 0) throw new DAOException("Length of title is zero");
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      int fCode;
-      String fTitle;
-      boolean found = false;
-      long foundAt = 0;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        foundAt = randomAccessFile.getFilePointer();
-        fCode = Integer.parseInt(randomAccessFile.readLine());
-        fTitle = randomAccessFile.readLine();
-        if (fCode == code) {
-          found = true;
-          break;
-        }
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT code FROM course WHERE code=?");
+      preparedStatement.setInt(1, code);
+      ResultSet resultSet = preparedStatement.executeQuery();
+      if (resultSet.next() == false) {
+        connection.close();
+        preparedStatement.close();
+        resultSet.close();
+        throw new DAOException("Invalid course code: " + code);
       }
-      if (found == false) {
-        throw new DAOException("Invalid code: " + code);
+      preparedStatement =
+          connection.prepareStatement("SELECT code FROM course WHERE title=? AND CODE!=?");
+      preparedStatement.setString(1, title);
+      preparedStatement.setInt(2, code);
+      resultSet = preparedStatement.executeQuery();
+      if (resultSet.next() == true) {
+        connection.close();
+        preparedStatement.close();
+        resultSet.close();
+        throw new DAOException("Course already exists: " + title);
       }
-      // copy data in tmp file. then go to foundAt position, and update. then copy tmp to original
-      File tmpFile = new File("course.tmp");
-      if (tmpFile.exists()) tmpFile.delete();
-      RandomAccessFile tmpRandomAccessFile;
-      tmpRandomAccessFile = new RandomAccessFile(tmpFile, "rw");
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        tmpRandomAccessFile.writeBytes(randomAccessFile.readLine() + "\n");
-      }
-      randomAccessFile.seek(foundAt);
-      randomAccessFile.writeBytes(code + "\n");
-      randomAccessFile.writeBytes(title + "\n");
-
-      tmpRandomAccessFile.seek(0);
-      while (tmpRandomAccessFile.getFilePointer() < tmpRandomAccessFile.length()) {
-        randomAccessFile.writeBytes(tmpRandomAccessFile.readLine() + "\n");
-      }
-      randomAccessFile.setLength(randomAccessFile.getFilePointer());
-      randomAccessFile.close();
-      tmpRandomAccessFile.close();
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      resultSet.close();
+      preparedStatement.close();
+      preparedStatement = connection.prepareStatement("UPDATE course SET title=? WHERE code=?");
+      preparedStatement.setString(1, title);
+      preparedStatement.setInt(2, code);
+      preparedStatement.executeUpdate();
+      preparedStatement.close();
+      connection.close();
+    } catch (Exception exception) {
+      throw new DAOException(exception.getMessage());
     }
   }
 
   public void delete(int code) throws DAOException {
-    // validate incoming code
-    if (code <= 0) throw new DAOException("Invalid code: " + code);
     try {
-      File file = new File(FILE_NAME);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      int fCode;
-      String fTitle;
-      boolean found = false;
-      long foundAt = 0;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        foundAt = randomAccessFile.getFilePointer();
-        fCode = Integer.parseInt(randomAccessFile.readLine());
-        fTitle = randomAccessFile.readLine();
-        if (fCode == code) {
-          found = true;
-          break;
-        }
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT code FROM course WHERE code=?");
+      preparedStatement.setInt(1, code);
+      ResultSet resultSet = preparedStatement.executeQuery();
+      if (resultSet.next() == false) {
+        connection.close();
+        preparedStatement.close();
+        resultSet.close();
+        throw new DAOException("Invalid course code: " + code);
       }
-      if (found == false) {
-        throw new DAOException("Invalid code: " + code);
-      }
-      // copy data in tmp file. then go to foundAt position, and delete. then copy tmp to original
-      File tmpFile = new File("course.tmp");
-      if (tmpFile.exists()) tmpFile.delete();
-      RandomAccessFile tmpRandomAccessFile;
-      tmpRandomAccessFile = new RandomAccessFile(tmpFile, "rw");
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) {
-        tmpRandomAccessFile.writeBytes(randomAccessFile.readLine() + "\n");
-      }
-      randomAccessFile.seek(foundAt);
-      tmpRandomAccessFile.seek(0);
-      while (tmpRandomAccessFile.getFilePointer() < tmpRandomAccessFile.length()) {
-        randomAccessFile.writeBytes(tmpRandomAccessFile.readLine() + "\n");
-      }
-      randomAccessFile.setLength(randomAccessFile.getFilePointer());
-      // update header after deletion
-      randomAccessFile.seek(0);
-      randomAccessFile.readLine();
-      foundAt = randomAccessFile.getFilePointer();
-      int recordCount = Integer.parseInt(randomAccessFile.readLine().trim());
-      recordCount--;
-      randomAccessFile.seek(foundAt);
-      randomAccessFile.writeBytes(String.format("%-10d", recordCount) + "\n");
-      randomAccessFile.close();
-      tmpRandomAccessFile.close();
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+
+      resultSet.close();
+      preparedStatement.close();
+      preparedStatement = connection.prepareStatement("DELETE FROM course WHERE code=?");
+      preparedStatement.setInt(1, code);
+      preparedStatement.executeUpdate();
+      preparedStatement.close();
+      connection.close();
+    } catch (Exception exception) {
+      throw new DAOException(exception.getMessage());
     }
   }
 
   public Set<CourseDTOInterface> getAll() throws DAOException {
-    TreeSet<CourseDTOInterface> treeSet1 = new TreeSet<>();
+    Set<CourseDTOInterface> courses = new TreeSet<>();
+    CourseDTOInterface courseDTO;
+    int code;
+    String title;
     try {
       Connection connection = DAOConnection.getConnection();
-      PreparedStatement prepareStatement = connection.prepareStatement("SELECT * FROM course");
-      ResultSet resultSet = prepareStatement.executeQuery();
-      CourseDTOInterface courseDTO;
+      PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM course");
+      ResultSet resultSet = preparedStatement.executeQuery();
       while (resultSet.next()) {
+        code = resultSet.getInt("code");
+        title = resultSet.getString("title");
         courseDTO = new CourseDTO();
-        courseDTO.setCode(resultSet.getInt("code"));
-        courseDTO.setTitle(resultSet.getString("title").trim());
-        treeSet1.add(courseDTO);
+        courseDTO.setCode(code);
+        courseDTO.setTitle(title);
+        courses.add(courseDTO);
       }
-      connection.close();
-      prepareStatement.close();
       resultSet.close();
-      return treeSet1;
-    } catch (SQLException sqlException) {
-      throw new DAOException(sqlException.getMessage());
+      preparedStatement.close();
+      connection.close();
+      return courses;
+    } catch (Exception exception) {
+      throw new DAOException(exception.getMessage());
     }
   }
 
   public CourseDTOInterface getByCode(int code) throws DAOException {
-    if (code <= 0) throw new DAOException("Invalid code: " + code);
+    CourseDTOInterface courseDTO;
+    String title;
     try {
-      File file = new File(FILE_NAME);
-      if (!(file.exists())) throw new DAOException("Invalid code: " + code);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      int fCode;
-      String fTitle;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) // loop to find code
-      {
-        fCode = Integer.parseInt(randomAccessFile.readLine());
-        fTitle = randomAccessFile.readLine();
-        if (fCode == code) {
-          // wrap
-          CourseDTOInterface courseDTO;
-          courseDTO = new CourseDTO();
-          courseDTO.setCode(fCode);
-          courseDTO.setTitle(fTitle);
-          randomAccessFile.close();
-          return courseDTO;
-        }
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT * FROM course WHERE code=?");
+      preparedStatement.setInt(1, code);
+      ResultSet resultSet = preparedStatement.executeQuery();
+
+      if (resultSet.next() == false) {
+        connection.close();
+        preparedStatement.close();
+        resultSet.close();
+        throw new DAOException("Invalid course code: " + code);
       }
-      randomAccessFile.close();
-      throw new DAOException("Invalid code: " + code);
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      code = resultSet.getInt("code");
+      title = resultSet.getString("title");
+      courseDTO = new CourseDTO();
+      courseDTO.setCode(code);
+      courseDTO.setTitle(title);
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return courseDTO;
+    } catch (Exception exception) {
+      throw new DAOException(exception.getMessage());
     }
   }
 
   public CourseDTOInterface getByTitle(String title) throws DAOException {
-    if (title == null) throw new DAOException("Title is null");
-    title = title.trim();
-    if (title.length() == 0) throw new DAOException("Length of title is zero");
+    CourseDTOInterface courseDTO;
+    int code;
     try {
-      File file = new File(FILE_NAME);
-      if (!(file.exists())) throw new DAOException("Invalid title: " + title);
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      int fCode;
-      String fTitle;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) // loop to find code
-      {
-        fCode = Integer.parseInt(randomAccessFile.readLine());
-        fTitle = randomAccessFile.readLine();
-        if (title.equalsIgnoreCase(fTitle)) {
-          // wrap
-          CourseDTOInterface courseDTO;
-          courseDTO = new CourseDTO();
-          courseDTO.setCode(fCode);
-          courseDTO.setTitle(fTitle);
-          randomAccessFile.close();
-          return courseDTO;
-        }
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT * FROM course WHERE title=?");
+      preparedStatement.setString(1, title);
+      ResultSet resultSet = preparedStatement.executeQuery();
+
+      if (resultSet.next() == false) {
+        connection.close();
+        preparedStatement.close();
+        resultSet.close();
+        throw new DAOException("Invalid course title: " + title);
       }
-      randomAccessFile.close();
-      throw new DAOException("Invalid title: " + title);
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      code = resultSet.getInt("code");
+      title = resultSet.getString("title");
+      courseDTO = new CourseDTO();
+      courseDTO.setCode(code);
+      courseDTO.setTitle(title);
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return courseDTO;
+    } catch (Exception exception) {
+      throw new DAOException(exception.getMessage());
     }
   }
 
   public boolean codeExists(int code) throws DAOException {
-    if (code <= 0) return false;
     try {
-      File file = new File(FILE_NAME);
-      if (!(file.exists())) return false;
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      int fCode;
-      String fTitle;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) // loop to find code
-      {
-        fCode = Integer.parseInt(randomAccessFile.readLine());
-        fTitle = randomAccessFile.readLine();
-        if (fCode == code) {
-          return true;
-        }
-      }
-      randomAccessFile.close();
-      return false;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT code FROM course WHERE code=?");
+      preparedStatement.setInt(1, code);
+      ResultSet resultSet = preparedStatement.executeQuery();
+
+      boolean codeExists = resultSet.next();
+
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return codeExists;
+    } catch (Exception exception) {
+      throw new DAOException(exception.getMessage());
     }
   }
 
   public boolean titleExists(String title) throws DAOException {
-    if (title == null) return false;
-    title = title.trim();
-    if (title.length() == 0) return false;
     try {
-      File file = new File(FILE_NAME);
-      if (!(file.exists())) return false;
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      randomAccessFile.readLine();
-      int fCode;
-      String fTitle;
-      while (randomAccessFile.getFilePointer() < randomAccessFile.length()) // loop to find title
-      {
-        fCode = Integer.parseInt(randomAccessFile.readLine());
-        fTitle = randomAccessFile.readLine();
-        if (title.equalsIgnoreCase(fTitle)) {
-          return true;
-        }
-      }
-      randomAccessFile.close();
-      return false;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT code FROM course WHERE title=?");
+      preparedStatement.setString(1, title);
+      ResultSet resultSet = preparedStatement.executeQuery();
+
+      boolean titleExists = resultSet.next();
+
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return titleExists;
+    } catch (Exception exception) {
+      throw new DAOException(exception.getMessage());
     }
   }
 
   public int getCount() throws DAOException {
+    int count = 0;
     try {
-      File file = new File(FILE_NAME);
-      if (!(file.exists())) return 0;
-      RandomAccessFile randomAccessFile;
-      randomAccessFile = new RandomAccessFile(file, "rw");
-      randomAccessFile.readLine();
-      int recordCount = Integer.parseInt(randomAccessFile.readLine().trim());
-      return recordCount;
-    } catch (IOException ioException) {
-      throw new DAOException(ioException.getMessage());
+      Connection connection = DAOConnection.getConnection();
+      PreparedStatement preparedStatement =
+          connection.prepareStatement("SELECT COUNT(code) FROM course");
+      ResultSet resultSet = preparedStatement.executeQuery();
+      if (resultSet.next()) {
+        count = resultSet.getInt(1);
+      }
+      resultSet.close();
+      preparedStatement.close();
+      connection.close();
+      return count;
+    } catch (Exception exception) {
+      throw new DAOException(exception.getMessage());
     }
   }
-}
+} // end of class
