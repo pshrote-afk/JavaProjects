@@ -17,12 +17,12 @@ Uses **File Handling** for the Data Layer and writes data into flat files.
 Include the `.jar` files of the common folder, all 3 layers, and `pl\libs\itext\*`.
 
 ```bash
-java -classpath c:\JavaProjects\hr\common\dist\hr-common.jar;
-                 c:\JavaProjects\hr\dl\dist\dl.jar;
-                 c:\JavaProjects\hr\bl\build\libs\bl.jar;
-                 c:\JavaProjects\hr\pl\build\libs\pl.jar;
-                 c:\JavaProjects\hr\pl\libs\itext7\*;. 
-                 com.thinking.machines.hr.pl.Main
+java -classpath ..\common\dist\hr-common.jar;
+                ..\dl\dist\dl.jar;
+                ..\bl\build\libs\bl.jar;
+                .\build\libs\pl.jar;
+                .\libs\itext7\*;. 
+                com.thinking.machines.hr.pl.Main
 ```
 
 ## 2. PL-BL-DBDL Layers (MySQL Database)
@@ -33,13 +33,14 @@ Uses **MySQL Database** for the Data Layer and writes into database.
 Include `.jar` file of common folder, .jar file of all 3 layers, `pl\libs\itext\*`, `dbdl\libs\mysql-connector-j-9.3.0.jar`.
 
 ```bash
-java -classpath c:\JavaProjects\hr\common\dist\hr-common.jar;      
-                c:\JavaProjects\hr\dbdl\build\libs\dbdl.jar;
-                c:\JavaProjects\hr\bl\build\libs\bl.jar;
-                c:\JavaProjects\hr\pl\build\libs\pl.jar;
-                c:\JavaProjects\hr\pl\libs\itext7\*;
-                c:\JavaProjects\hr\dbdl\libs\*;. 
+java -classpath ..\common\dist\hr-common.jar;
+                ..\dbdl\build\libs\dbdl.jar;
+                ..\bl\build\libs\bl.jar;
+                .\build\libs\pl.jar;
+                .\libs\itext7\*;
+                ..\dbdl\libs\*;. 
                 com.thinking.machines.hr.pl.Main
+
 ```
 
 ---
