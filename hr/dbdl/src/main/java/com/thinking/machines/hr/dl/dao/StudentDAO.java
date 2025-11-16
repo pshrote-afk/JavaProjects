@@ -251,7 +251,8 @@ public class StudentDAO implements StudentDAOInterface {
       String name;
       int courseCode;
       String title;
-      java.sql.Date dateOfBirth; // cause we're receiving Date object from an sql database
+      java.sql.Date sqlDateOfBirth; // cause we're receiving Date object from an sql database
+      java.util.Date dateOfBirth;
       String gender;
       boolean isIndian;
       BigDecimal fees;
@@ -263,8 +264,9 @@ public class StudentDAO implements StudentDAOInterface {
         name = resultSet.getString("name").trim();
         courseCode = resultSet.getInt("course_code");
         title = resultSet.getString("title").trim();
-        dateOfBirth = resultSet.getDate("date_of_birth");
-        gender = resultSet.getString("gender");
+        sqlDateOfBirth = resultSet.getDate("date_of_birth");
+        dateOfBirth = new java.util.Date(sqlDateOfBirth.getTime());
+	gender = resultSet.getString("gender");
         isIndian = resultSet.getBoolean("is_indian");
         fees = resultSet.getBigDecimal("fees");
         enrollmentNumber = resultSet.getString("enrollment_number").trim();
